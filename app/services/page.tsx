@@ -15,7 +15,7 @@ const Footer = dynamic(() => import("@/components/helper/Footer"), {
   ssr: false,
 });
 
-const First = "https://res.cloudinary.com/dkwwt6plu/image/upload/v1756299419/pag_25_xojade.jpg";
+const First = "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758710311/branding_xg5svd.png";
 const Second = "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371577/2_kf3k77.svg";
 const Third = "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371576/3_amw37o.svg";
 const Fourth = "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371576/4_unjxc0.svg";

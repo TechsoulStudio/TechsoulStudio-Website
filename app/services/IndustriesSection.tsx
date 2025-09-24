@@ -6,17 +6,17 @@ import Head from "next/head";
 import { motion, AnimatePresence } from "framer-motion";
 
 const industries = [
-  { name: "Retail", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755766773/vk4cqytk31czi4jy7oxh.jpg" },
-  { name: "Finance", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755767033/mxdmstt4ohe0bt1ahu9l.jpg" },
-  { name: "Healthcare", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755767095/mvdtcfdqebko9rhrvqku.jpg" },
-  { name: "Technology", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1756269036/4_uyy6ij.jpg" },
-  { name: "eCommerce", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1756269037/5_clgvrw.jpg" },
-  { name: "Beauty + Wellness", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755767096/z0wvqqoiauf9yfqyp9zo.jpg" },
-  { name: "Manufacturing", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755767034/haud3h0iuq2p59hwojk2.jpg" },
-  { name: "Renewables", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755766174/vhmmxtvf4jkphicno1ai.jpg" },
-  { name: "Hospitality", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755766775/evworojnlgb4ggwio3aw.jpg" },
-  { name: "Education", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755766776/j6rfl3d11c6h7ykpat3s.jpg" },
-  { name: "F&B", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1755766777/syah1ixjjjqbpsrwjemi.jpg" },
+  { name: "Retail", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371119/1_exxu8s.jpg" },
+  { name: "Finance", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371120/2_jym6mj.jpg" },
+  { name: "Healthcare", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371120/3_i4repx.jpg" },
+  { name: "Technology", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371119/4_vn3omp.jpg" },
+  { name: "eCommerce", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371122/5_aol7sk.jpg" },
+  { name: "Beauty + Wellness", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371120/6_ghmi7z.jpg" },
+  { name: "Manufacturing", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371122/7_qyaylj.jpg" },
+  { name: "Renewables", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371120/8_n052mz.jpg" },
+  { name: "Hospitality", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371123/9_pawbqd.jpg" },
+  { name: "Education", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371119/10_ndcnxy.jpg" },
+  { name: "F&B", image: "https://res.cloudinary.com/dkwwt6plu/image/upload/v1758371119/11_z0vztt.jpg" },
 ];
 
 export default function IndustriesSection() {
