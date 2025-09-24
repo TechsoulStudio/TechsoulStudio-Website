@@ -1,0 +1,88 @@
+
+@font-face {
+  font-family: 'AeonikPro-Trial';
+  src: url('../public//fonts/AeonikPro-Trial/AeonikProTRIAL-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'AeonikPro-Trial';
+  src: url('../public//fonts/AeonikPro-Trial/AeonikProTRIAL-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'AeonikPro-Trial', sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+@media (max-width: 824px) {
+  body {
+    overflow-y: auto;
+  }
+}
+
+@layer components {
+  .swiper-pagination-bullet {
+    @apply bg-[#babbb5] opacity-50;
+  }
+  .swiper-pagination-bullet-active {
+    @apply bg-white opacity-100;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 10s linear infinite;
+}
+
+.slick-dots li div {
+  transition: all 0.3s ease;
+}
+
+.slick-dots li.slick-active div {
+  background-color: #babbb5 !important;
+  opacity: 1 !important;
+  scale: 1.1;
+}
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
