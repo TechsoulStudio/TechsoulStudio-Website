@@ -43,11 +43,7 @@ export default function ProjectDetailsPage() {
     loadProject();
   }, [slug]);
 
-  useEffect(() => {
-    // document.body.style.overflow = showModal ? "hidden" : "auto";
-  }, [showModal]);
-
-  if (loading) return ;
+  if (loading) return;
   if (!project) return <p className="p-10 text-white">Project not found.</p>;
 
   const images = project.images || [];
@@ -91,118 +87,72 @@ export default function ProjectDetailsPage() {
 
       <section className="relative z-10">
         <div className="bg-[#5a5d59] text-[#dad9d6] px-4 lg:px-10 py-10">
-          {project.image && (
-            <div className="w-full h-[350px] sm:min-h-[110vh] relative overflow-hidden mb-10">
+          {images[0] && (
+            <div className="w-full h-[400px] sm:min-h-[110vh] relative overflow-hidden mb-10">
               <Image
-                src={project.image}
-                alt={project.title}
+                src={images[0]}
+                alt={`${project.title} first`}
                 fill
                 className="object-cover"
               />
             </div>
           )}
 
-          {images[0] && (
-            <div className="grid md:grid-cols-2 gap-10 py-10">
-              <div className="w-full flex justify-center">
-                <Image
-                  src={images[0]}
-                  alt={project.title}
-                  width={0}
-                  height={0}
-                  sizes="100vw"
-                  className="w-full h-auto object-contain"
-                />
+          {images.length > 7 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10">
+              {images
+                .slice(1, 4)
+                .concat(images.slice(7, images.length - 1))
+                .map((img, i) => {
+                  if (!img) return null;
+
+                  let className = "w-full flex justify-center";
+                  if (i === 0) className += " sm:col-start-2";
+                  if (i === 3) className += " sm:col-start-2";
+                  if (i === 8) className += " sm:col-start-2";
+
+                  return (
+                    <div key={i} className={className}>
+                      <Image
+                        src={img}
+                        alt={`${project.title} - middle ${i}`}
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        className="w-full h-auto object-contain"
+                      />
+                    </div>
+                  );
+                })}
+            </div>
+          )}
+
+          {images.length > 5 && (
+            <div className="space-y-10 pt-10 pb-10">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {images.slice(4, 7).map(
+                  (img, i) =>
+                    img && (
+                      <div key={i} className="w-full flex justify-center">
+                        <Image
+                          src={img}
+                          alt={`${project.title} - ${i + 5}`}
+                          width={0}
+                          height={0}
+                          sizes="100vw"
+                          className="w-full h-auto object-contain"
+                        />
+                      </div>
+                    )
+                )}
               </div>
             </div>
           )}
 
-          {images[1] || images[2] ? (
-            <div className="flex flex-col md:flex-row gap-6 mb-10">
-              {images.slice(1, 3).map(
-                (img, i) =>
-                  img && (
-                    <div
-                      key={i}
-                      className="w-full md:w-1/2 flex justify-center"
-                    >
-                      <Image
-                        src={img}
-                        alt={project.title}
-                        width={0}
-                        height={0}
-                        sizes="100vw"
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                  )
-              )}
-            </div>
-          ) : null}
-
-          {images[3] && (
-            <div className="grid md:grid-cols-2 gap-10 py-10">
-              <div></div>
-              <div className="w-full flex justify-center">
-                <Image
-                  src={images[3]}
-                  alt={project.title}
-                  width={0}
-                  height={0}
-                  sizes="100vw"
-                  className="w-full h-auto object-contain"
-                />
-              </div>
-            </div>
-          )}
-
-          {images[4] || images[5] || images[6] ? (
-            <div className="flex flex-col md:flex-row md:flex-wrap gap-6 pt-10 pb-10">
-              {images.slice(4, 7).map(
-                (img, i) =>
-                  img && (
-                    <div
-                      key={i}
-                      className="w-full md:w-[32%] flex justify-center"
-                    >
-                      <Image
-                        src={img}
-                        alt={`${project.title} - ${i + 5}`}
-                        width={0}
-                        height={0}
-                        sizes="100vw"
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                  )
-              )}
-            </div>
-          ) : null}
-
-          {images.slice(8).length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-10 pb-10">
-              {images.slice(8).map(
-                (img, i) =>
-                  img && (
-                    <div key={i} className="w-full flex justify-center">
-                      <Image
-                        src={img}
-                        alt={`${project.title} - ${i + 8}`}
-                        width={0}
-                        height={0}
-                        sizes="100vw"
-                        className="w-full h-auto object-contain"
-                      />
-                    </div>
-                  )
-              )}
-            </div>
-          )}
-
-          {images[7] && (
-            <div className="w-full h-[350px] sm:min-h-[110vh] relative overflow-hidden mb-10">
+          {images.length > 1 && (
+            <div className="w-full h-[400px] sm:min-h-[110vh] relative overflow-hidden mb-10">
               <Image
-                src={images[7]}
+                src={images[images.length - 1]}
                 alt={`${project.title} final`}
                 fill
                 className="object-cover"
@@ -229,7 +179,6 @@ export default function ProjectDetailsPage() {
         onClose={() => setShowModal(false)}
         title={project.title}
         services={project.services}
-        // webUrl={project.webUrl}
         description={project.description}
         details={project.details}
       />

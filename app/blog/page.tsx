@@ -174,14 +174,14 @@ export default function Page() {
             viewport={{ once: true, amount: 0.2 }}
             className="pb-24"
           >
-            <div className="px-4 sm:px-8 md:px-12 lg:px-10 grid sm:grid-cols-2 gap-4 lg:grid-cols-6 lg:auto-rows-[200px] auto-rows-[minmax(250px,auto)]">
+            <div className="px-4 sm:px-8 md:px-12 lg:px-10 grid sm:grid-cols-2 gap-4 lg:grid-cols-6 lg:auto-rows-[350px] auto-rows-[minmax(250px,auto)]">
               {loading && <p className="text-gray-500">Loading blogs...</p>}
 
               {!loading &&
                 filteredBlogs.map((blog, index) => (
                   <motion.div
                     key={index}
-                    className={`group relative overflow-hidden cursor-pointer sm:shadow-md bg-[#5a5d59] ${getGridClass(
+                    className={`group relative overflow-hidden cursor-pointer bg-[#5a5d59] ${getGridClass(
                       index
                     )}`}
                     initial={{ opacity: 0, y: 60 }}
@@ -197,13 +197,15 @@ export default function Page() {
                       href={`/blog/${blog.slug}`}
                       className="block w-full h-full"
                     >
-                      <div className="relative w-full h-48 sm:h-full overflow-hidden">
+                      <div className="relative w-full overflow-hidden">
                         <Image
                           src={blog.image || "/images/placeholder.jpg"}
                           alt={blog.title}
-                          width={800}
-                          height={600}
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          width={0}
+                          height={0}
+                          sizes="100vw"
+                          style={{ width: "100%", height: "auto" }}
+                          className="object-contain transition-transform duration-500 group-hover:scale-105"
                         />
 
                         <div className="hidden sm:absolute sm:inset-0 lg:bg-[#5a5d59]/60 lg:backdrop-blur-sm sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:flex flex-col justify-end p-4 sm:p-6">

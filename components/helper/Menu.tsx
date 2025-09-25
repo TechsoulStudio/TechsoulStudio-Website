@@ -17,9 +17,9 @@ export default function Menu({ onClose }: MenuProps) {
     { label: "Home", href: "/" },
     { label: "About", href: "/about" },
     { label: "Services", href: "/services" },
-    { label: "Contact", href: "/contact" },
     { label: "Projects", href: "/project" },
     { label: "Journal & Blogs", href: "/blog" },
+    { label: "Contact", href: "/contact" },
   ];
 
   useEffect(() => {

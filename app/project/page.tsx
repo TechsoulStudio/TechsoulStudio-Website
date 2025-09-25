@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -37,6 +37,16 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedService, setSelectedService] = useState<string>("All");
+  const allServices = [
+    "All",
+    "Brand Identity Design & Strategy",
+    "Digital Product",
+    "Graphic Design",
+    "Packaging Design",
+    "Website Design",
+    "E-commerce",
+    "Content Design & Photography",
+  ];
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -52,17 +62,17 @@ export default function ProjectsPage() {
     loadProjects();
   }, []);
 
-  const services = useMemo(() => {
-    const set = new Set<string>();
-    projects.forEach((p) => {
-      if (p.services && Array.isArray(p.services)) {
-        p.services.forEach((s) => set.add(s));
-      } else if (p.category) {
-        set.add(p.category);
-      }
-    });
-    return ["All", ...Array.from(set)];
-  }, [projects]);
+  // const services = useMemo(() => {
+  //   const set = new Set<string>();
+  //   projects.forEach((p) => {
+  //     if (p.services && Array.isArray(p.services)) {
+  //       p.services.forEach((s) => set.add(s));
+  //     } else if (p.category) {
+  //       set.add(p.category);
+  //     }
+  //   });
+  //   return ["All", ...Array.from(set)];
+  // }, [projects]);
 
   const filteredProjects =
     selectedService === "All"
@@ -100,29 +110,24 @@ export default function ProjectsPage() {
             </motion.h1>
           </div>
 
-          <div className="px-4 sm:px-6 md:px-8 lg:px-10 pb-6">
+          <div className="px-4 sm:px-6 md:px-8 lg:px-10 pb-6 max-w-2xl">
             <h2 className="text-[#dad9d6] font-semibold mb-3 text-2xl">
               Services —
             </h2>
-            <div className="grid grid-cols-4 gap-4">
-              {[0, 1, 2, 3].map((colIndex) => (
-                <ul key={colIndex} className="flex flex-col gap-1">
-                  {services
-                    .slice(colIndex * 4, colIndex * 4 + 4)
-                    .map((service) => (
-                      <li
-                        key={service}
-                        onClick={() => setSelectedService(service)}
-                        className={`cursor-pointer transition text-sm sm:text-xl px-2 ${
-                          selectedService === service
-                            ? "text-[#dad9d6] font-bold"
-                            : "text-[#babbb5] hover:text-[#dad9d6]"
-                        }`}
-                      >
-                        {service}
-                      </li>
-                    ))}
-                </ul>
+            <div className="grid grid-cols-2 sm:grid-cols-2">
+              {allServices.map((service) => (
+                <div key={service}>
+                  <li
+                    onClick={() => setSelectedService(service)}
+                    className={`cursor-pointer transition text-sm sm:text-lg px-2 list-none ${
+                      selectedService === service
+                        ? "text-[#dad9d6] font-bold"
+                        : "text-[#babbb5] hover:text-[#dad9d6]"
+                    }`}
+                  >
+                    {service}
+                  </li>
+                </div>
               ))}
             </div>
           </div>

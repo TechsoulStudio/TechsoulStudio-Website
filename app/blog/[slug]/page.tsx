@@ -67,7 +67,6 @@ export default function BlogDetailPage() {
 
   return (
     <>
-      {/* Menu button */}
       <div className="fixed top-4 right-4 z-50">
         <button
           onClick={() => setOpenMenu(true)}
@@ -79,9 +78,8 @@ export default function BlogDetailPage() {
       </div>
       {openMenu && <Menu onClose={() => setOpenMenu(false)} />}
 
-      {/* Header Section */}
       <section className="relative w-full sticky top-0 z-20">
-        <div className="bg-[#bcbcb4] text-[#81837e] px-4 sm:px-6 md:px-10 lg:px-20">
+        <div className="bg-[#bcbcb4] text-[#81837e] px-4 sm:px-6 md:px-10 lg:px-20 h-[75vh] flex flex-col justify-between">
           <div className="py-8">
             <div
               className="text-base sm:text-lg font-bold cursor-pointer group"
@@ -101,28 +99,34 @@ export default function BlogDetailPage() {
             </h2>
           </div>
 
-          <div className="pb-6 pt-8">
-            <p className="text-base sm:text-lg mt-2">
-              <span className="font-semibold">Category:</span> {blog.category}
-            </p>
-            <p className="text-base sm:text-lg mt-2">
-              <span className="font-semibold">Published:</span>{" "}
-              {blog.date
-                ? new Date(blog.date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })
-                : "N/A"}
-            </p>
+          <div className="pb-6 pt-8 flex gap-10">
+            <div>
+              <p className="text-base sm:text-lg mt-2">
+                <span className="font-semibold">Category — </span>
+              </p>{" "}
+              <span className="text-base sm:text-lg">{blog.category}</span>
+            </div>
+
+            <div>
+              <p className="text-base sm:text-lg mt-2">
+                <span className="font-semibold">Published — </span>{" "}
+              </p>
+              <span className="text-base sm:text-lg">
+                {blog.date
+                  ? new Date(blog.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "N/A"}
+              </span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Blog Content */}
       <section className="relative z-20">
         <div className="bg-[#5a5d59] text-[#dad9d6] px-4 sm:px-6 md:px-10 lg:px-20 py-10 space-y-14">
-          {/* Main Image */}
           {blog.images?.[0] && (
             <div className="w-full">
               <Image
@@ -135,7 +139,6 @@ export default function BlogDetailPage() {
             </div>
           )}
 
-          {/* First image + content */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
             <div></div>
             <div className="text-base sm:text-lg space-y-4 leading-relaxed">
@@ -145,7 +148,6 @@ export default function BlogDetailPage() {
             </div>
           </div>
 
-          {/* 2 images side by side */}
           <div className="flex flex-col md:flex-row gap-6">
             {blog.images?.slice(1, 3).map(
               (img, i) =>
@@ -163,7 +165,6 @@ export default function BlogDetailPage() {
             )}
           </div>
 
-          {/* 3 images grid */}
           <div className="flex flex-col md:flex-row md:flex-wrap gap-5">
             {blog.images?.slice(3, 6).map(
               (img, i) =>
@@ -181,13 +182,8 @@ export default function BlogDetailPage() {
             )}
           </div>
 
-          {/* Content + last image */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
-            <div className="text-base sm:text-lg space-y-4 leading-relaxed">
-              {/* {blog.content?.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))} */}
-            </div>
+            <div className="text-base sm:text-lg space-y-4 leading-relaxed"></div>
             {blog.images?.[6] && (
               <Image
                 src={blog.images[6]}
