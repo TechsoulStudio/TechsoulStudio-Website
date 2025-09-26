@@ -49,12 +49,23 @@ import Profour from "@/public/images/services/Product/10.svg";
 import Profive from "@/public/images/services/Product/7.jpg";
 import Prosix from "@/public/images/services/Product/8.png";
 
-import Ecommone from "@/public/images/services/E-commerce/1.svg";
+import Ecommone from "@/public/images/services/E-commerce/7.svg";
 import Ecommtwo from "@/public/images/services/E-commerce/2.svg";
 import Ecommthree from "@/public/images/services/E-commerce/3.svg";
 import Ecommfour from "@/public/images/services/E-commerce/4.svg";
 import Ecommfive from "@/public/images/services/E-commerce/5.svg";
 import Ecommsix from "@/public/images/services/E-commerce/6.svg";
+
+import BrandMobileone from "@/public/images/services/Brand/2.svg";
+import DigitalMobileone from "@/public/images/services/Digital/2.svg";
+import GraphicMobileone from "@/public/images/services/Graphic/4.svg";
+import PackagingMobileone from "@/public/images/services/Packaging/15.webp";
+import WebMobileone from "@/public/images/services/Web/12.svg";
+import EcommMobileone from "@/public/images/services/E-commerce/8.svg";
+import WebMobilesix from "@/public/images/services/Web/11.svg";
+import EcommMobilesix from "@/public/images/services/E-commerce/9.svg";
+import ProMobilesix from "@/public/images/services/Product/8.png";
+
 
 import { StaticImageData } from "next/image";
 
@@ -62,6 +73,8 @@ export type Services = {
   title: string;
   slug: string;
   image?: StaticImageData;
+  imageoneMobile?: StaticImageData;
+  imagesixMobile?: StaticImageData;
   imageone?: StaticImageData;
   imagetwo?: StaticImageData;
   imagethree?: StaticImageData;
@@ -104,6 +117,7 @@ export const ServicesData: Services[] = [
     title: "Brand Identity Design & Strategy",
     slug: "brand-identity-design-and-strategy",
     imageone: Brandone,
+    imageoneMobile: BrandMobileone,
     imagetwo: Brandtwo,
     imagethree: Brandthree,
     imagefour: Brandfour,
@@ -209,6 +223,7 @@ export const ServicesData: Services[] = [
     title: "Digital Product",
     slug: "digital-product",
     imageone: Digitalone,
+    imageoneMobile: DigitalMobileone,
     imagetwo: Digitaltwo,
     imagethree: Digitalthree,
     imagefour: Digitalfour,
@@ -293,6 +308,7 @@ export const ServicesData: Services[] = [
     title: "Graphic Design",
     slug: "graphic-design",
     imageone: Graphicone,
+    imageoneMobile: GraphicMobileone,
     imagetwo: Graphictwo,
     imagethree: Graphicthree,
     imagefive: Graphicfive,
@@ -318,7 +334,7 @@ export const ServicesData: Services[] = [
       "In today’s visually driven world, graphic design extends far beyond logos and print materials. It involves designing for both print and digital environments ensuring consistency across touchpoints like brochures, banners, presentations, web visuals, and packaging. A strong graphic identity not only captures attention but also builds trust and creates lasting emotional connections with your audience.",
       "At TechsoulStudio, our approach to graphic design is rooted in strategy. We don’t just make things look good, we make them work effectively. Every graphic element is purposefully crafted to align with your brand goals, strengthen your message, and create visual harmony across platforms.",
     ],
-    whyTitle: "Surat Based Award Winning Graphic Design Service",
+    whyTitle: "Surat Based Graphic Design Service",
     why: [
       "Graphic design is a fundamental component to successful business. Companies all over the world, even in Surat, constantly invest in improving and enhancing their visual brands by adopting innovative graphic design.",
       "A strong and impactful visual statement can clearly communicate a brand’s messaging to its target audience, this can significantly increase penetration and drive growth.",
@@ -395,6 +411,7 @@ export const ServicesData: Services[] = [
     title: "Packaging Design",
     slug: "packaging-design",
     imageone: Packagingone,
+    imageoneMobile: PackagingMobileone,
     imagetwo: Packagingtwo,
     imagethree: Packagingthree,
     imagefour: Packagingfour,
@@ -495,11 +512,13 @@ export const ServicesData: Services[] = [
     slug: "website-design",
     // image: Six,
     imageone: Webone,
+    imageoneMobile: WebMobileone,
     imagetwo: Webtwo,
     imagethree: Webthree,
     imagefour: Webfour,
     imagefive: Webfive,
     imagesix: Websix,
+    imagesixMobile: WebMobilesix,
     FutureTitle:
       "Strategic Website Design That Engages Users and Drives Business Growth",
     Future: [
@@ -575,6 +594,7 @@ export const ServicesData: Services[] = [
     title: "Content Design and Photography",
     slug: "content-design-and-photography",
     // imageone: Proone,
+    imagesixMobile: ProMobilesix,
     imagetwo: Protwo,
     imagethree: Prothree,
     imagefour: Profour,
@@ -654,6 +674,8 @@ export const ServicesData: Services[] = [
     title: "E-Commerce Store",
     slug: "e-commerce-store",
     imageone: Ecommone,
+    imageoneMobile: EcommMobileone,
+    imagesixMobile: EcommMobilesix,
     imagetwo: Ecommtwo,
     imagethree: Ecommthree,
     imagefour: Ecommfour,

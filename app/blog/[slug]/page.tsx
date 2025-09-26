@@ -128,13 +128,12 @@ export default function BlogDetailPage() {
       <section className="relative z-20">
         <div className="bg-[#5a5d59] text-[#dad9d6] px-4 sm:px-6 md:px-10 lg:px-20 py-10 space-y-14">
           {blog.images?.[0] && (
-            <div className="w-full">
+            <div className="w-full h-[400px] sm:min-h-[110vh] relative overflow-hidden mb-10">
               <Image
                 src={blog.images[0]}
                 alt={blog.title}
-                width={1200}
-                height={800}
-                className="w-full h-auto object-contain"
+                fill
+                className="object-cover"
               />
             </div>
           )}

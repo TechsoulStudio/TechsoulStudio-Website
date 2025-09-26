@@ -167,20 +167,33 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.imageone && (
-            <div className="w-full h-[150px] sm:h-[100vh] relative overflow-hidden">
-              <Image
-                src={service.imageone}
-                alt={service.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, 50vw"
-                priority
-              />
+            <div className="w-full h-[450px] sm:h-[100vh] relative overflow-hidden">
+              <div className="sm:hidden">
+                <Image
+                  src={service.imageoneMobile || service.imageone}
+                  alt={service.title}
+                  fill
+                  className="object-cover"
+                  sizes="100vw"
+                  priority
+                />
+              </div>
+
+              <div className="hidden sm:block">
+                <Image
+                  src={service.imageone}
+                  alt={service.title}
+                  fill
+                  className="object-cover"
+                  sizes="50vw"
+                  priority
+                />
+              </div>
             </div>
           )}
 
           {service.why && service.why.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 sm:py-15 border-b md:border-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 border-b md:border-0">
               <div className="space-y-2 sm:pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.whyTitle}
@@ -195,7 +208,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.keyElements && service.keyElements.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 sm:py-15">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10">
               <div className="space-y-2 sm:pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.keyElementsTitle}
@@ -210,7 +223,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {(service.imagetwo || service.imagethree) && (
-            <div className="grid grid-cols-1 gap-4 pt-4 pb-10 sm:flex gap-6">
+            <div className="grid grid-cols-1 gap-4 sm:flex gap-6">
               {service.imagetwo && (
                 <div className="w-full sm:w-[50%] h-[300px] sm:h-[90vh] relative overflow-hidden mb-5 sm:mb-0">
                   <Image
@@ -235,13 +248,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.Importance && service.Importance.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start sm:py-5 border-b md:border-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 border-b md:border-0">
               <div className="space-y-2 sm:pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.ImportanceTitle}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:pt-4 space-y-1 text-lg pb-10 leading-[1.4]">
+              <div className="grid grid-cols-1 gap-2 sm:pt-4 space-y-1 text-lg leading-[1.4]">
                 {service.Importance.map((para, i) => (
                   <p key={i} dangerouslySetInnerHTML={{ __html: para }} />
                 ))}
@@ -250,13 +263,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.Distinct && service.Distinct.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-5 sm:py-15 border-b md:border-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 border-b md:border-0">
               <div className="space-y-2 sm:pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.DistinctTitle}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2 pt-4 space-y-1 text-lg pb-10 leading-[1.4]">
+              <div className="grid grid-cols-1 gap-2 pt-4 space-y-1 text-lg leading-[1.4]">
                 {service.Distinct.map((para, i) => (
                   <p key={i} dangerouslySetInnerHTML={{ __html: para }} />
                 ))}
@@ -265,13 +278,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.help && service.help.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-5 sm:py-15">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10">
               <div className="space-y-2 sm:pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.helpTitle}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2 sm:pt-4 space-y-1 text-lg pb-10 leading-[1.4]">
+              <div className="grid grid-cols-1 gap-2 pt-4 space-y-1 text-lg leading-[1.4]">
                 {service.help.map((para, i) => (
                   <p key={i} dangerouslySetInnerHTML={{ __html: para }} />
                 ))}
@@ -283,7 +296,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             service.imagefive ||
             service.videofour ||
             service.videofive) && (
-            <div className="grid grid-cols-1 gap-4 pt-4 pb-10 sm:flex gap-6">
+            <div className="grid grid-cols-1 gap-4 pt-4 sm:flex gap-6">
               {(service.imagefour || service.videofour) && (
                 <div className="w-full sm:w-[50%] h-[300px] sm:h-[90vh] relative overflow-hidden mb-5 sm:mb-0">
                   {service.imagefour ? (
@@ -329,13 +342,13 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.process && service.process.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start sm:py-10 leading-[1.4]  border-b md:border-0">
-              <div className="space-y-2 sm:pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 leading-[1.4] border-b md:border-0">
+              <div className="space-y-2 pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.processTitle}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2 pt-4 text-lg pb-10 leading-[1.2]">
+              <div className="grid grid-cols-1 gap-2 pt-4 text-lg leading-[1.2]">
                 {service.process.map((para, i) => (
                   <p key={i} dangerouslySetInnerHTML={{ __html: para }} />
                 ))}
@@ -344,35 +357,49 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {(service.imagesix || service.videosix) && (
-            <div className="w-full h-[170px] sm:h-[100vh] relative overflow-hidden">
-              {service.imagesix ? (
-                <Image
-                  src={service.imagesix}
-                  alt={service.title}
-                  fill
-                  className="object-cover"
-                />
-              ) : service.videosix ? (
-                <video
-                  src={service.videosix}
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              ) : null}
+            <div className="w-full h-[420px] sm:h-[100vh] relative overflow-hidden">
+              {service.imagesixMobile && (
+                <div className="sm:hidden relative w-full h-full">
+                  <Image
+                    src={service.imagesixMobile}
+                    alt={`${service.title} - mobile`}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                  />
+                </div>
+              )}
+              <div className="hidden sm:block relative w-full h-full">
+                {service.imagesix ? (
+                  <Image
+                    src={service.imagesix}
+                    alt={service.title}
+                    fill
+                    className="object-cover"
+                    sizes="100vw"
+                  />
+                ) : service.videosix ? (
+                  <video
+                    src={service.videosix}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : null}
+              </div>
             </div>
           )}
 
           {service.contact && service.contact.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start sm:py-5 border-b md:border-0">
-              <div className="space-y-2 sm:pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 border-b md:border-0 pt-6">
+              <div className="space-y-2 pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.contactTitle}
                 </h2>
               </div>
-              <div className="grid grid-cols-1 gap-2 pt-4 space-y-1 text-lg pb-10 leading-[1.4]">
+              <div className="grid grid-cols-1 gap-2 pt-4 space-y-1 text-lg leading-[1.4]">
                 {service.contact.map((para, i) => (
                   <p key={i} dangerouslySetInnerHTML={{ __html: para }} />
                 ))}
@@ -381,7 +408,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {(service.imageeight || service.imagenine || service.imageten) && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 pb-10 sm:flex gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 sm:flex gap-6">
               {service.imageeight && (
                 <div className="w-full sm:w-[32%] h-[300px] sm:h-[70vh] relative overflow-hidden mb-5 sm:mb-0">
                   <Image
@@ -417,7 +444,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           )}
 
           {service.Future && service.Future.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start sm:py-10 leading-[1.4]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-10 items-start py-10 leading-[1.4]">
               <div className="space-y-2 pt-4">
                 <h2 className="text-2xl sm:text-3xl font-bold leading-tight">
                   {service.FutureTitle}

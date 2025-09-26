@@ -39,12 +39,12 @@ export default function ProjectsPage() {
   const [selectedService, setSelectedService] = useState<string>("All");
   const allServices = [
     "All",
-    "Brand Identity Design & Strategy",
     "Digital Product",
-    "Graphic Design",
+    "Brand Identity Design & Strategy",
     "Packaging Design",
-    "Website Design",
+    "Graphic Design",
     "E-commerce",
+    "Website Design",
     "Content Design & Photography",
   ];
 

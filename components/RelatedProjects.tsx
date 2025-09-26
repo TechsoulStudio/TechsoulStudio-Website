@@ -22,7 +22,7 @@ type Props = {
 };
 
 const sliderSettings = (projectsLength: number) => ({
-  dots: true,
+  dots: false,
   arrows: false,
   infinite: projectsLength > 3,
   speed: 600,

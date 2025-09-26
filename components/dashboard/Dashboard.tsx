@@ -22,13 +22,20 @@ export default function Home() {
   useEffect(() => {
     setIsClient(true);
     const lenis = initLenis();
-    const timer = setTimeout(() => {
+    const hasSeenLoader = localStorage.getItem("hasSeenLoader");
+
+    if (hasSeenLoader) {
       setLoading(false);
-    }, 7000);
+    } else {
+      const timer = setTimeout(() => {
+        setLoading(false);
+        localStorage.setItem("hasSeenLoader", "true");
+      }, 7000);
+      return () => clearTimeout(timer);
+    }
 
     return () => {
       lenis?.destroy?.();
-      clearTimeout(timer);
     };
   }, []);
 

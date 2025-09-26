@@ -19,7 +19,7 @@ export default function RelatedBlogs({ blogs }: RelatedBlogsProps) {
   if (!blogs || blogs.length === 0) return null;
 
   const sliderSettings = {
-    dots: true,
+    dots: false,
     arrows: false,
     infinite: blogs.length > 3,
     speed: 600,

@@ -8,7 +8,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { fetchPosts, Post } from "@/Service/api";
 
 const sliderSettings = {
-  dots: true,
+  dots: false,
   arrows: false,
   infinite: true,
   speed: 600,
@@ -74,7 +74,7 @@ const SocialMedia: React.FC = () => {
                       alt={item.title}
                       width={300}
                       height={400}
-                      className="w-full h-[400px] sm:h-[350px] object-cover transition-all duration-300 group-hover:scale-110"
+                      className="w-full h-[400px] sm:h-[400px] object-cover transition-all duration-300 group-hover:scale-110"
                     />
                   </a>
                 </div>
