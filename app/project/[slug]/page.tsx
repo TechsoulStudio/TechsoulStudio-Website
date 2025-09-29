@@ -179,6 +179,7 @@ export default function ProjectDetailsPage() {
         onClose={() => setShowModal(false)}
         title={project.title}
         services={project.services}
+        webUrl={project.webUrl}
         description={project.description}
         details={project.details}
       />
