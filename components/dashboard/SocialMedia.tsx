@@ -16,23 +16,9 @@ const sliderSettings = {
   slidesToScroll: 1,
   autoplay: true,
   autoplaySpeed: 2500,
-  appendDots: (dots: React.ReactNode) => (
-    <div>
-      <ul className="flex justify-center gap-2 mt-6">{dots}</ul>
-    </div>
-  ),
-  customPaging: () => (
-    <div className="w-3 h-3 rounded-full bg-[#babbb5] opacity-50 hover:opacity-100 transition duration-300" />
-  ),
   responsive: [
-    {
-      breakpoint: 1024,
-      settings: { slidesToShow: 2 },
-    },
-    {
-      breakpoint: 640,
-      settings: { slidesToShow: 1 },
-    },
+    { breakpoint: 1024, settings: { slidesToShow: 2 } },
+    { breakpoint: 640, settings: { slidesToShow: 1 } },
   ],
 };
 
@@ -41,7 +27,10 @@ const SocialMedia: React.FC = () => {
 
   useEffect(() => {
     fetchPosts()
-      .then((data) => setPosts(data))
+      .then((data) => {
+        const lastFivePosts = data.slice(0, 5);
+        setPosts(lastFivePosts);
+      })
       .catch((err) => console.error("Failed to fetch posts:", err));
   }, []);
 
@@ -74,8 +63,17 @@ const SocialMedia: React.FC = () => {
                       alt={item.title}
                       width={300}
                       height={400}
-                      className="w-full h-[400px] sm:h-[400px] object-cover transition-all duration-300 group-hover:scale-110"
+                      className="w-full h-[400px] sm:h-[400px] object-cover transition-all duration-300"
                     />
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Image
+                        src="/icone/instagram.png"
+                        alt="Instagram"
+                        width={70}
+                        height={70}
+                        className="object-contain transform transition-transform duration-2000 group-hover:scale-180"
+                      />
+                    </div>
                   </a>
                 </div>
               ))}

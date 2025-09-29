@@ -171,7 +171,7 @@ const Page = () => {
                 }}
                 viewport={{ once: true }}
               >
-                <div className="w-full h-90 relative overflow-hidden">
+                <div className="w-full h-100 relative overflow-hidden">
                   <Image
                     src={post.image}
                     alt={post.title}
