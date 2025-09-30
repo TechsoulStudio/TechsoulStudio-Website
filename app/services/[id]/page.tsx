@@ -225,7 +225,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           {(service.imagetwo || service.imagethree) && (
             <div className="grid grid-cols-1 gap-4 sm:flex gap-6">
               {service.imagetwo && (
-                <div className="w-full sm:w-[50%] h-[300px] sm:h-[90vh] relative overflow-hidden mb-5 sm:mb-0">
+                <div className="w-full sm:w-[50%] h-[300px] lg:h-[90vh] relative overflow-hidden mb-5 sm:mb-0">
                   <Image
                     src={service.imagetwo}
                     alt={service.title}
@@ -235,7 +235,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 </div>
               )}
               {service.imagethree && (
-                <div className="w-full sm:w-[50%] h-[300px] sm:h-[90vh] relative overflow-hidden">
+                <div className="w-full sm:w-[50%] h-[300px] lg:h-[90vh] relative overflow-hidden">
                   <Image
                     src={service.imagethree}
                     alt={service.title}
@@ -298,7 +298,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
             service.videofive) && (
             <div className="grid grid-cols-1 gap-4 pt-4 sm:flex gap-6">
               {(service.imagefour || service.videofour) && (
-                <div className="w-full sm:w-[50%] h-[300px] sm:h-[90vh] relative overflow-hidden mb-5 sm:mb-0">
+                <div className="w-full sm:w-[50%] h-[300px] lg:h-[90vh] relative overflow-hidden mb-5 sm:mb-0">
                   {service.imagefour ? (
                     <Image
                       src={service.imagefour}
@@ -319,7 +319,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               )}
 
               {(service.imagefive || service.videofive) && (
-                <div className="w-full sm:w-[50%] h-[300px] sm:h-[90vh] relative overflow-hidden">
+                <div className="w-full sm:w-[50%] h-[300px] lg:h-[90vh] relative overflow-hidden">
                   {service.imagefive ? (
                     <Image
                       src={service.imagefive}
@@ -410,7 +410,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
           {(service.imageeight || service.imagenine || service.imageten) && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 sm:flex gap-6">
               {service.imageeight && (
-                <div className="w-full sm:w-[32%] h-[300px] sm:h-[70vh] relative overflow-hidden mb-5 sm:mb-0">
+                <div className="w-full sm:w-[32%] h-[300px] lg:h-[70vh] relative overflow-hidden mb-5 sm:mb-0">
                   <Image
                     src={service.imageeight}
                     alt={service.title}
@@ -421,7 +421,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
               )}
 
               {service.imagenine && (
-                <div className="w-full sm:w-[32%] h-[300px] sm:h-[70vh] relative overflow-hidden">
+                <div className="w-full sm:w-[32%] h-[300px] lg:h-[70vh] relative overflow-hidden">
                   <Image
                     src={service.imagenine}
                     alt={service.title}
@@ -431,7 +431,7 @@ export default function Page({ params }: { params: Promise<{ id: string }> }) {
                 </div>
               )}
               {service.imageten && (
-                <div className="w-full sm:w-[32%] h-[300px] sm:h-[70vh] relative overflow-hidden">
+                <div className="w-full sm:w-[32%] h-[300px] lg:h-[70vh] relative overflow-hidden">
                   <Image
                     src={service.imageten}
                     alt={service.title}

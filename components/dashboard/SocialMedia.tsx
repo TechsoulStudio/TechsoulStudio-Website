@@ -61,9 +61,10 @@ const SocialMedia: React.FC = () => {
                     <Image
                       src={item.image}
                       alt={item.title}
-                      width={300}
-                      height={400}
-                      className="w-full h-[400px] sm:h-[400px] object-cover transition-all duration-300"
+                      width={0}
+                      height={0}
+                      sizes="100vw"
+                      className="w-full h-auto object-contain transition-all duration-300"
                     />
                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                       <Image
