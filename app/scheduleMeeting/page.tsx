@@ -32,9 +32,9 @@ function ScheduleMeetingContent() {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
         >
-          <div className="relative w-[90%] h-[90vh] bg-white rounded-xl overflow-hidden shadow-xl flex flex-col md:flex-row">
+          <div className="relative w-full max-w-7xl max-h-[100vh] bg-white rounded-xl shadow-xl flex flex-col md:flex-row overflow-hidden">
             <button
               onClick={handleClose}
               className="absolute top-3 right-3 text-gray-500 hover:text-black text-3xl font-light z-10"
@@ -42,7 +42,7 @@ function ScheduleMeetingContent() {
             >
               &times;
             </button>
-            <div className="w-full md:w-[40%] p-4 sm:p-6 flex flex-col items-center justify-center bg-[#f9f9f9] border-b md:border-b-0 md:border-r border-gray-200 text-center">
+            <div className="w-full md:w-[40%] p-6 flex flex-col items-center justify-center bg-[#f9f9f9] border-b md:border-b-0 md:border-r border-gray-200 text-center">
               <div className="w-16 h-16 relative mb-4">
                 <Image
                   src="/images/1.png"
@@ -68,7 +68,7 @@ function ScheduleMeetingContent() {
                 Schedule a call with us to explore how we can work together.
               </p>
             </div>
-            <div className="w-full md:w-[60%] h-full">
+            <div className="w-full md:w-[60%] h-[500px] md:h-auto overflow-auto">
               <iframe
                 src="https://calendly.com/techsoulstudio/30min?hide_event_type_details=1&hide_gdpr_banner=1"
                 width="100%"
@@ -76,7 +76,7 @@ function ScheduleMeetingContent() {
                 frameBorder="0"
                 allowFullScreen
                 title="Calendly Scheduling"
-                className="w-full h-full"
+                className="w-full h-full min-h-[500px]"
               ></iframe>
             </div>
           </div>
