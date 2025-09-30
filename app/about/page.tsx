@@ -15,6 +15,7 @@ import SuccessStoriesCarousel from "@/components/SuccessStories";
 import ClientsSection from "@/components/ClientsSection";
 import TeamSection from "@/components/TeamSection";
 import { Variants } from "framer-motion";
+import Link from "next/link";
 
 export default function AboutPage() {
   const [isClient, setIsClient] = useState(false);
@@ -106,10 +107,13 @@ export default function AboutPage() {
               <p className="text-base sm:text-xl max-w-lg font-semibold pt-4">
                 Aligned with our vision?
               </p>
-              <div className="text-base sm:text-xl font-bold text-[#babbb5] cursor-pointer group">
+              <Link
+                href="/contact"
+                className="text-lg font-bold text-[#84837e] cursor-pointer inline-flex items-center group"
+              >
                 Get in touch
                 <FaArrowRight className="inline-block text-[#babbb5] transition-transform duration-300 group-hover:translate-x-1 ml-2" />
-              </div>
+              </Link>
             </motion.div>
             <div className="grid grid-cols-1 gap-4 pt-4 space-y-2 text-lg leading-[1.4]">
               <motion.p variants={itemVariants}>
@@ -207,11 +211,11 @@ export default function AboutPage() {
             </div>
             <div className="grid grid-cols-1 gap-4 pt-4 space-y-2 text-lg leading-[1.4]">
               <motion.p variants={itemVariants}>
-                At TechsoulStudio a collective of visionary designers,
-                creative innovators, and strategic thinkers united by a shared
-                passion for pushing boundaries. We dismantle traditional design
-                silos and outdated processes to craft authentic, distinctive,
-                and lasting creative solutions that place both the client and
+                At TechsoulStudio a collective of visionary designers, creative
+                innovators, and strategic thinkers united by a shared passion
+                for pushing boundaries. We dismantle traditional design silos
+                and outdated processes to craft authentic, distinctive, and
+                lasting creative solutions that place both the client and
                 end-user at the center.
               </motion.p>
               <motion.p variants={itemVariants}>
