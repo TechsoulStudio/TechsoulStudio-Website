@@ -142,7 +142,7 @@ export default function Footer() {
               href="mailto:info@techsoulstudio.com"
               className="block cursor-pointer"
             >
-              <p>E: info@techsoulstudio.com</p>
+              <p>E: techsoulstudio@gmail.com</p>
             </a>
           </div>
 

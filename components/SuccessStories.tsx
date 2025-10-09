@@ -84,7 +84,7 @@ export default function SuccessStoriesCarousel() {
                           </p>
                         </div>
                       </div>
-                      <p className="text-sm sm:text-base md:text-lg leading-relaxed max-w-xl">
+                      <p className="text-sm sm:text-base md:text-lg leading-relaxed">
                         “{story.quote}”
                       </p>
                     </div>
