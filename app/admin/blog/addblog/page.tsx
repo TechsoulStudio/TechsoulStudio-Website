@@ -8,17 +8,19 @@ import toast from "react-hot-toast";
 
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-// import Underline from "@tiptap/extension-underline";
+import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
+import Link from "@tiptap/extension-link";
 import {
   Bold,
   Italic,
-  Underline,
+  Underline as UnderlineIcon,
   List,
   ListOrdered,
   AlignLeft,
   AlignCenter,
   AlignRight,
+  Link as LinkIcon,
 } from "lucide-react";
 import { TextStyle } from "@tiptap/extension-text-style";
 import FontSize from "@/components/extensions/FontSizeExtension";
@@ -32,7 +34,8 @@ export default function AddBlogPage() {
     category: "",
     date: "",
     // discussionPoints: [] as string[],
-    content: [] as string[],
+    // content: [] as string[],
+    content: "",
     image: null as File | null,
     images: [] as File[],
   });
@@ -87,8 +90,8 @@ export default function AddBlogPage() {
     if (!formData.category) newErrors.category = "Category is required";
     if (!formData.date) newErrors.date = "Date is required";
     if (!formData.image) newErrors.image = "Main blog image is required";
-    if (formData.content.length === 0)
-      newErrors.content = "At least one content paragraph is required";
+    if (!formData.content || formData.content.trim() === "")
+      newErrors.content = "Content is required";
     // if (formData.discussionPoints.length === 0)
     //   newErrors.discussionPoints = "At least one discussion point is required";
 
@@ -109,9 +112,13 @@ export default function AddBlogPage() {
       StarterKit,
       Underline,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      TextStyle, // Works!
-      FontSize.configure({
-        types: ["textStyle"],
+      TextStyle,
+      FontSize.configure({ types: ["textStyle"] }),
+      Link.configure({
+        openOnClick: true,
+        HTMLAttributes: {
+          class: "text-blue-600 underline",
+        },
       }),
     ],
     content: "",
@@ -144,7 +151,7 @@ export default function AddBlogPage() {
           category: "",
           date: "",
           // discussionPoints: [],
-          content: [],
+          content: "",
           image: null,
           images: [],
         });
@@ -159,6 +166,22 @@ export default function AddBlogPage() {
       setIsSubmitting(false);
     }
   };
+
+  const setLink = () => {
+    if (!editor) return;
+
+    const previousUrl = editor.getAttributes("link").href;
+    const url = prompt("Enter URL", previousUrl || "https://");
+
+    if (url === null) return; // cancel
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  };
+
   // ---- TOOLBAR BUTTON FUNCTION ---- //
   const format = (cmd: string) => {
     if (!editor) return;
@@ -304,7 +327,14 @@ export default function AddBlogPage() {
                   onClick={() => format("underline")}
                   className="p-2 rounded hover:bg-gray-300"
                 >
-                  <Underline size={18} />
+                  <UnderlineIcon size={18} />
+                </button>
+
+                <button
+                  onClick={() => setLink()}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <LinkIcon size={18} />
                 </button>
 
                 <select

@@ -609,7 +609,8 @@ export interface BlogFormData {
   category: string;
   date: string;
   // discussionPoints: string[];
-  content: string[];
+  // content: string[];
+  content: string,
   image: File | null;
   images: File[];
   // imageUrls: string[];
@@ -622,7 +623,8 @@ export interface Blog {
   category: string;
   date: string;
   // discussionPoints: string[];
-  content: string[];
+  // content: string[];
+  content: "",
   imageUrl?: string;
   createdAt?: string;
   updatedAt?: string;

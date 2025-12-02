@@ -23,7 +23,7 @@ export interface Blog extends APIBlog {
   date: string;
   keypoints: string[];
   discussionPoints: string[];
-  content: string[];
+  content: "";
   image: string;
   images?: string[];
   imageUrl?: string;
