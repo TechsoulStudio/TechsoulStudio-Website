@@ -20,7 +20,7 @@ import {
   AlignCenter,
   AlignRight,
 } from "lucide-react";
-import TextStyle from "@tiptap/extension-text-style";
+import { TextStyle } from "@tiptap/extension-text-style";
 import FontSize from "@/components/extensions/FontSizeExtension";
 
 export default function AddBlogPage() {
@@ -108,8 +108,8 @@ export default function AddBlogPage() {
     extensions: [
       StarterKit,
       Underline,
-      TextStyle,
       TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextStyle, // Works!
       FontSize.configure({
         types: ["textStyle"],
       }),
