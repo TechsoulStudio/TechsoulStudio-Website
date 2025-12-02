@@ -6,6 +6,23 @@ import { FiUploadCloud, FiTrash2 } from "react-icons/fi";
 import { addBlog } from "@/Service/api";
 import toast from "react-hot-toast";
 
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+// import Underline from "@tiptap/extension-underline";
+import TextAlign from "@tiptap/extension-text-align";
+import {
+  Bold,
+  Italic,
+  Underline,
+  List,
+  ListOrdered,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+} from "lucide-react";
+import TextStyle from "@tiptap/extension-text-style";
+import FontSize from "@/components/extensions/FontSizeExtension";
+
 export default function AddBlogPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -28,27 +45,21 @@ export default function AddBlogPage() {
     setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
-  const addArrayItem = (
-    field: "content",
-    value: string
-  ) => {
-    if (!value.trim()) return;
-    setFormData((prev) => ({
-      ...prev,
-      [field]: [...prev[field], value],
-    }));
-    setErrors((prev) => ({ ...prev, [field]: "" }));
-  };
+  // const addArrayItem = (field: "content", value: string) => {
+  //   if (!value.trim()) return;
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [field]: [...prev[field], value],
+  //   }));
+  //   setErrors((prev) => ({ ...prev, [field]: "" }));
+  // };
 
-  const removeArrayItem = (
-    field: "content",
-    index: number
-  ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index),
-    }));
-  };
+  // const removeArrayItem = (field: "content", index: number) => {
+  //   setFormData((prev) => ({
+  //     ...prev,
+  //     [field]: prev[field].filter((_, i) => i !== index),
+  //   }));
+  // };
 
   const handleImageUpload = (file: File) => {
     handleChange("image", file);
@@ -91,6 +102,25 @@ export default function AddBlogPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ---------- TIPTAP EDITOR ----------
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Underline,
+      TextStyle,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      FontSize.configure({
+        types: ["textStyle"],
+      }),
+    ],
+    content: "",
+    onUpdate: ({ editor }) => {
+      const html = editor?.getHTML() || "";
+      handleChange("content", html);
+    },
+  });
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
@@ -127,6 +157,43 @@ export default function AddBlogPage() {
       toast.error("❌ Failed to submit blog: Unexpected error");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+  // ---- TOOLBAR BUTTON FUNCTION ---- //
+  const format = (cmd: string) => {
+    if (!editor) return;
+
+    switch (cmd) {
+      case "bold":
+        editor.chain().focus().toggleBold().run();
+        break;
+      case "italic":
+        editor.chain().focus().toggleItalic().run();
+        break;
+      case "underline":
+        editor.chain().focus().toggleUnderline().run();
+        break;
+      case "h2":
+        editor.chain().focus().toggleHeading({ level: 2 }).run();
+        break;
+      case "h3":
+        editor.chain().focus().toggleHeading({ level: 3 }).run();
+        break;
+      case "bullet":
+        editor.chain().focus().toggleBulletList().run();
+        break;
+      case "ordered":
+        editor.chain().focus().toggleOrderedList().run();
+        break;
+      case "left":
+        editor.chain().focus().setTextAlign("left").run();
+        break;
+      case "center":
+        editor.chain().focus().setTextAlign("center").run();
+        break;
+      case "right":
+        editor.chain().focus().setTextAlign("right").run();
+        break;
     }
   };
 
@@ -216,39 +283,102 @@ export default function AddBlogPage() {
             )}
             <div>
               <label className="block text-sm font-medium mb-1">Content</label>
-              <textarea
-                placeholder="Write a paragraph and press Enter to add"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addArrayItem(
-                      "content",
-                      (e.target as HTMLTextAreaElement).value
-                    );
-                    (e.target as HTMLTextAreaElement).value = "";
+
+              {/* Toolbar */}
+              <div className="flex flex-wrap gap-2 mb-3 p-2 rounded border">
+                <button
+                  onClick={() => format("bold")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <Bold size={18} />
+                </button>
+
+                <button
+                  onClick={() => format("italic")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <Italic size={18} />
+                </button>
+
+                <button
+                  onClick={() => format("underline")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <Underline size={18} />
+                </button>
+
+                <select
+                  onChange={(e) =>
+                    e.target.value === "reset"
+                      ? editor?.chain().focus().unsetFontSize().run()
+                      : editor
+                          ?.chain()
+                          .focus()
+                          .setFontSize(e.target.value)
+                          .run()
                   }
-                }}
-                rows={3}
-                className="border border-gray-300 h-50 rounded-lg px-4 py-2 w-full outline-none focus:border-[#84837e]"
-              />
-              {errors.content && (
-                <p className="text-red-500 text-sm mt-1">{errors.content}</p>
-              )}
-              <div className="mt-2 space-y-2">
-                {formData.content.map((p, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between bg-[#5a5d59] text-white px-3 py-2 rounded"
-                  >
-                    <span>{p}</span>
-                    <FiTrash2
-                      className="cursor-pointer"
-                      onClick={() => removeArrayItem("content", i)}
-                    />
-                  </div>
-                ))}
+                  className="border rounded px-2 py-1 text-sm"
+                >
+                  <option value="">Font Size</option>
+                  <option value="12px">12px</option>
+                  <option value="14px">14px</option>
+                  <option value="18px">18px</option>
+                  <option value="24px">24px</option>
+                  <option value="26px">26px</option>
+                  <option value="30px">30px</option>
+                  <option value="32px">32px</option>
+                  <option value="36px">36px</option>
+                  <option value="reset">Reset</option>
+                </select>
+
+                <button
+                  onClick={() => format("bullet")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <List size={18} />
+                </button>
+
+                <button
+                  onClick={() => format("ordered")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <ListOrdered size={18} />
+                </button>
+
+                <button
+                  onClick={() => format("left")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <AlignLeft size={18} />
+                </button>
+
+                <button
+                  onClick={() => format("center")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <AlignCenter size={18} />
+                </button>
+
+                <button
+                  onClick={() => format("right")}
+                  className="p-2 rounded hover:bg-gray-300"
+                >
+                  <AlignRight size={18} />
+                </button>
               </div>
+
+              <div
+                className="border rounded p-2 min-h-[250px]"
+                onClick={() => editor?.chain().focus().run()}
+              >
+                <EditorContent editor={editor} />
+              </div>
+
+              {errors.content && (
+                <p className="text-red-500 text-sm">{errors.content}</p>
+              )}
             </div>
+            {/* </div> */}
           </div>
 
           <div className="space-y-6">
@@ -316,44 +446,44 @@ export default function AddBlogPage() {
             </div>
 
             {/* <div>
-              <label className="block text-sm font-medium mb-1">
-                Discussion Points
-              </label>
-              <input
-                type="text"
-                placeholder="Type & press Enter"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addArrayItem(
-                      "discussionPoints",
-                      (e.target as HTMLInputElement).value
-                    );
-                    (e.target as HTMLInputElement).value = "";
-                  }
-                }}
-                className="border border-gray-300 rounded-lg px-4 py-2 w-full"
-              />
-              {errors.discussionPoints && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.discussionPoints}
-                </p>
-              )}
-              <div className="mt-2 space-y-2">
-                {formData.discussionPoints.map((dp, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between bg-[#5a5d59] text-white px-3 py-2 rounded"
-                  >
-                    <span>{dp}</span>
-                    <FiTrash2
-                      className="cursor-pointer"
-                      onClick={() => removeArrayItem("discussionPoints", i)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div> */}
+                <label className="block text-sm font-medium mb-1">
+                  Discussion Points
+                </label>
+                <input
+                  type="text"
+                  placeholder="Type & press Enter"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addArrayItem(
+                        "discussionPoints",
+                        (e.target as HTMLInputElement).value
+                      );
+                      (e.target as HTMLInputElement).value = "";
+                    }
+                  }}
+                  className="border border-gray-300 rounded-lg px-4 py-2 w-full"
+                />
+                {errors.discussionPoints && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.discussionPoints}
+                  </p>
+                )}
+                <div className="mt-2 space-y-2">
+                  {formData.discussionPoints.map((dp, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between bg-[#5a5d59] text-white px-3 py-2 rounded"
+                    >
+                      <span>{dp}</span>
+                      <FiTrash2
+                        className="cursor-pointer"
+                        onClick={() => removeArrayItem("discussionPoints", i)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div> */}
           </div>
         </div>
       </div>

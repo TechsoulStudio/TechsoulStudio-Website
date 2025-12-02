@@ -9,10 +9,17 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-react": "^11.0.0",
     "@heroicons/react": "^1.0.6",
     "@lexical/react": "^0.34.0",
     "@radix-ui/react-slot": "^1.2.3",
     "@studio-freight/lenis": "^1.0.42",
+    "@tiptap/extension-text-align": "^3.11.1",
+    "@tiptap/extension-text-style": "^3.11.1",
+    "@tiptap/extension-underline": "^3.11.1",
+    "@tiptap/react": "^3.11.1",
+    "@tiptap/starter-kit": "^3.11.1",
     "aos": "^2.3.4",
     "axios": "^1.11.0",
     "canvas-confetti": "^1.9.3",

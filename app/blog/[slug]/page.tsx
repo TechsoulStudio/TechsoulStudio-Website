@@ -140,11 +140,11 @@ export default function BlogDetailPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
             <div></div>
-            <div className="text-base sm:text-lg space-y-4 leading-relaxed">
-              {blog.content?.map((para, i) => (
-                <p key={i}>{para}</p>
-              ))}
-            </div>
+
+            <div
+              className="text-base sm:text-lg space-y-4 leading-relaxed blog-content"
+              dangerouslySetInnerHTML={{ __html: blog.content }}
+            ></div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-6">
