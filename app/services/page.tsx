@@ -27,6 +27,11 @@ import ScheduleMeeting from "@/components/ScheduleMeeting";
 import IndustriesSection from "./IndustriesSection";
 import SuccessStoriesCarousel from "@/components/SuccessStories";
 
+export const metadata = {
+  title: "Services | TechsoulStudio",
+  description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
+};
+
 type Services = {
   title: string;
   id: string;

@@ -15,6 +15,11 @@ const Footer = dynamic(() => import("@/components/helper/Footer"), {
   ssr: false,
 });
 
+export const metadata = {
+  title: "Blog | TechsoulStudio",
+  description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
+};
+
 export interface Blog extends APIBlog {
   _id: string;
   title: string;

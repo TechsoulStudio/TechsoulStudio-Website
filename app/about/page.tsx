@@ -17,6 +17,11 @@ import TeamSection from "@/components/TeamSection";
 import { Variants } from "framer-motion";
 import Link from "next/link";
 
+export const metadata = {
+  title: "About TechsoulStudio | Our Creative Team",
+  description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
+};
+
 export default function AboutPage() {
   const [isClient, setIsClient] = useState(false);
   const [openMenu, setOpenMenu] = useState(false);

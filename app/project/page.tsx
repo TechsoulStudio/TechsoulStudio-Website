@@ -16,6 +16,11 @@ const Footer = dynamic(() => import("@/components/helper/Footer"), {
   ssr: false,
 });
 
+export const metadata = {
+  title: "Projects | TechsoulStudio",
+  description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
+};
+
 const getGridClass = (index: number) => {
   const layoutIndex = index % 7;
   switch (layoutIndex) {
