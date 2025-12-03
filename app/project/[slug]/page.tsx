@@ -16,11 +16,6 @@ const Footer = dynamic(() => import("@/components/helper/Footer"), {
   ssr: false,
 });
 
-// export const metadata = {
-//   title: "Project | TechsoulStudio",
-//   description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
-// };
-
 export default function ProjectDetailsPage() {
   const { slug } = useParams();
   const router = useRouter();
