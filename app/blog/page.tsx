@@ -49,10 +49,10 @@ const getGridClass = (index: number) => {
   }
 };
 
-export const metadata = {
-  title: "Blog | TechsoulStudio",
-  description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
-};
+// export const metadata = {
+//   title: "Blog | TechsoulStudio",
+//   description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
+// };
 
 export default function Page() {
   const [openMenu, setOpenMenu] = useState(false);

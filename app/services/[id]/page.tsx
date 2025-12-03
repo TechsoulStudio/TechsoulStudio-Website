@@ -17,10 +17,10 @@ const Footer = dynamic(() => import("@/components/helper/Footer"), {
   ssr: false,
 });
 
-export const metadata = {
-  title: "Services | TechsoulStudio",
-  description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
-};
+// export const metadata = {
+//   title: "Services | TechsoulStudio",
+//   description: "TechsoulStudio is a branding and web design agency based in Surat,India.",
+// };
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState<string | null>(null);
