@@ -1,7 +1,7 @@
 
 export const metadata = {
     title: "Blog TechsoulStudio | Our Creative Team",
-    description: "TechsoulStudio is a branding and web design agency based in Surat, India.",
+    description: "Latest Branding, Web Design & Digital Marketing Insights from Daily Updates.",
 };
 
 import Blog from "./BlogClient";

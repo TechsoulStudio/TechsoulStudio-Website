@@ -100,11 +100,11 @@ export default function RootLayout({
           property="og:description"
           content="We provide expert branding, website development, e-commerce solutions & IT services to scale your business globally."
         />
-        <meta property="og:url" content="https://yourwebsite.com" />
+        <meta property="og:url" content="https://techsoulstudio.com" />
         <meta property="og:site_name" content="TechsoulStudio" />
         <meta
           property="og:image"
-          content="https://yourwebsite.com/og-image.jpg"
+          content="https://techsoulstudio.com/og-image.jpg"
         />
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
