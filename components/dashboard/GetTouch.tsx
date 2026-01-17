@@ -27,7 +27,7 @@ const itemVariants: Variants = {
 
 export default function GetTouch() {
   return (
-    <section className="w-full px-4 sm:px-6 md:px-8 lg:px-10 py-16 bg-[#5a5d59]">
+    <section className="w-full px-4 sm:px-6 md:px-8 lg:px-10 py-16 bg-[#5a5d59] border-b border-[#babbb5]">
       <motion.div
         className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start"
         initial="hidden"

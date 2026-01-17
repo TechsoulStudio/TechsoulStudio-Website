@@ -54,11 +54,11 @@ export default function ClientsSection() {
       whileInView="visible"
       viewport={{ once: true, amount: 0.2 }}
       variants={containerVariants}
-      className="bg-[#5a5d59] sm:py-20 px-4 sm:px-6 md:px-8 lg:px-10 py-10"
+      className="bg-[#5a5d59] sm:py-20 px-4 sm:px-6 md:px-8 lg:px-10 py-10 text-[#babbb5]"
     >
       <motion.h2
         variants={itemVariants}
-        className="text-lg sm:text-xl md:text-2xl font-bold leading-tight sm:mb-8"
+        className="text-lg sm:text-xl md:text-2xl font-bold text-[#babbb5] leading-tight"
       >
         Clients we design for —
       </motion.h2>
