@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://techsoulstudio.com
+
+# Sitemaps
+Sitemap: https://techsoulstudio.com/sitemap.xml
