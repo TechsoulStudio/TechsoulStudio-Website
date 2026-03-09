@@ -453,6 +453,7 @@ export default function AddBlogPage() {
                 <option value="Graphic Design">Graphic Design</option>
                 <option value="Packaging Design">Packaging Design</option>
                 <option value="Website Design">Website Design</option>
+                <option value="E-Commerce Store">E-Commerce Store</option>
                 <option value="Content Design and Photography">
                   Content Design and Photography
                 </option>
