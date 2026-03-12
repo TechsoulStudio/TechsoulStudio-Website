@@ -39,7 +39,7 @@ const getGridClass = (index: number) => {
     case 5:
       return "lg:col-span-2 lg:row-span-2";
     case 6:
-      return "lg:col-span-2 lg:row-span-3";
+      return "lg:col-span-2 lg:row-span-2";
     case 7:
       return "lg:col-span-4 lg:row-span-3";
     case 8:
@@ -213,17 +213,9 @@ export default function Blog() {
                           className="object-contain transition-transform duration-500 group-hover:scale-105"
                         />
 
-                        <div className="hidden sm:absolute sm:inset-0 lg:bg-[#5a5d59]/60 lg:backdrop-blur-sm sm:opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:flex flex-col justify-end p-4 sm:p-6">
-                          <h3 className="text-sm sm:text-md md:text-lg font-semibold text-[#dad9d6]">
-                            {blog.title}
-                          </h3>
-                          <p className="text-xs sm:text-md font-bold text-[#dad9d6]">
-                            {blog.category}
-                          </p>
-                        </div>
                       </div>
 
-                      <div className="sm:hidden bg-[#5a5d59] p-4">
+                      <div className="bg-[#5a5d59] p-4">
                         <h3 className="text-sm font-semibold text-[#dad9d6]">
                           {blog.title}
                         </h3>
