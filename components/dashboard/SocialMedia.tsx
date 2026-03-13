@@ -32,37 +32,37 @@ const posts: Post[] = [
   {
     id: 1,
     title: "Instagram Post 1",
-    image: "/Images/SocialMedia/1.jpg",
+    image: "/images/SocialMedia/1.jpg",
     link: "https://www.instagram.com/p/DO8gdFUk--N/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
   },
   {
     id: 2,
     title: "Instagram Post 2",
-    image: "/Images/SocialMedia/2.jpg",
+    image: "/images/SocialMedia/2.jpg",
     link: "https://www.instagram.com/p/DO57wUakhj7/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
   },
   {
     id: 3,
     title: "Instagram Post 3",
-    image: "/Images/SocialMedia/3.jpg",
+    image: "/images/SocialMedia/3.jpg",
     link: "https://www.instagram.com/p/DO02PXPk92h/?utm_source=ig_web_copy_link",
   },
   {
     id: 4,
     title: "Instagram Post 4",
-    image: "/Images/SocialMedia/4.jpg",
+    image: "/images/SocialMedia/4.jpg",
     link: "https://www.instagram.com/p/DO57wUakhj7/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
   },
   {
     id: 5,
     title: "Instagram Post 5",
-    image: "/Images/SocialMedia/5.jpg",
+    image: "/images/SocialMedia/5.jpg",
     link: "https://www.instagram.com/p/DPBlBp3E-Fh/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
   },
   {
     id: 6,
     title: "Instagram Post 6",
-    image: "/Images/SocialMedia/6.jpg",
+    image: "/images/SocialMedia/6.jpg",
     link: "https://www.instagram.com/p/DO_I6Smkwtr/?utm_source=ig_web_copy_link&igsh=MzRlODBiNWFlZA==",
   },
 ];
