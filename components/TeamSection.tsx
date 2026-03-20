@@ -17,7 +17,7 @@ const team: TeamMember[] = [
     id: 1,
     name: "Smit Bhanderi",
     role: "Managing + Creative Director",
-    image: "/Images/Team/smit.jpg",
+    image: "/images/Team/smit.jpg",
   },
 ];
 
