@@ -24,19 +24,27 @@ export default function Menu({ onClose }: MenuProps) {
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimateIn(true), 10);
-    return () => clearTimeout(timer);
+
+    // BODY SCROLL LOCK
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      clearTimeout(timer);
+      document.body.style.overflow = "auto";
+    };
   }, []);
 
   const handleClose = () => {
     setAnimateIn(false);
+
     setTimeout(() => {
       onClose();
-    }, 2000);
+    }, 1500);
   };
 
   return (
     <main
-      className={`fixed w-screen h-screen bg-[#bbbab1] z-50 transform transition-transform duration-[1.5s] ease-in-out ${
+      className={`fixed inset-0 w-screen h-screen bg-[#bbbab1] z-[99999] overflow-y-auto transform transition-transform duration-[1.5s] ease-in-out ${
         animateIn ? "translate-y-0" : "translate-y-full"
       }`}
     >
@@ -46,7 +54,7 @@ export default function Menu({ onClose }: MenuProps) {
       >
         <MdOutlineClose
           size={42}
-          className="text-[#81837e] hover:text-[#81837e] transition-all duration-300 hover:rotate-90"
+          className="text-[#81837e] transition-all duration-300 hover:rotate-90"
         />
       </div>
 
@@ -71,20 +79,10 @@ export default function Menu({ onClose }: MenuProps) {
                       : "opacity-0 -translate-x-2"
                   }`}
                 />
+
                 <Link
                   href={item.href}
-                  onClick={(e) => {
-                    if (item.href.startsWith("#")) {
-                      e.preventDefault();
-                      const target = document.querySelector(item.href);
-                      if (target) {
-                        target.scrollIntoView({ behavior: "smooth" });
-                        handleClose();
-                      }
-                    } else {
-                      handleClose();
-                    }
-                  }}
+                  onClick={() => handleClose()}
                   className={`transition-all duration-300 ${
                     hoveredIndex === index
                       ? "pl-10 sm:pl-12 md:pl-16 lg:pl-20"
@@ -98,6 +96,7 @@ export default function Menu({ onClose }: MenuProps) {
           ))}
         </ol>
       </div>
+
       <div className="hidden sm:block absolute right-10 bottom-10 cursor-default text-[#81837e] text-2xl sm:text-4xl font-semibold [writing-mode:vertical-rl] rotate-180 leading-tight">
         <BlurFade delay={1.5} direction="right" duration={1} inView>
           TechsoulStudio
