@@ -40,7 +40,9 @@ import Footer from "@/components/helper/Footer";
 import Link from "next/link";
 
 // Initialize Firebase dynamically to ensure no crashes on local setups without configuration
-let app, auth, db;
+let app: any;
+let auth: any;
+let db: any;
 const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
 
 try {
@@ -367,13 +369,16 @@ export default function App() {
 
       setLoginLoading(true);
 
-      const response = await fetch("https://techsoulstudio-back.onrender.com/api/user/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "https://techsoulstudio-back.onrender.com/api/user/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(loginData),
         },
-        body: JSON.stringify(loginData),
-      });
+      );
 
       const data = await response.json();
 
@@ -419,13 +424,16 @@ export default function App() {
 
       setSignupLoading(true);
 
-      const response = await fetch("https://techsoulstudio-back.onrender.com/api/user/signup", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        "https://techsoulstudio-back.onrender.com/api/user/signup",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(signupData),
         },
-        body: JSON.stringify(signupData),
-      });
+      );
 
       const data = await response.json();
 
