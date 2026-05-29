@@ -2195,20 +2195,20 @@ function doPost(e) {
                         <th className="py-3 px-4 text-[#DAD9D6]">
                           Metal Purity ({previewTab})
                         </th>
-                        <th className="py-3 px-3 text-right text-[#D8D6D4]">
+                        <th className="py-3 px-3 text-center text-[#D8D6D4]">
                           Calculated Weight
                         </th>{" "}
                         {/* Added column */}
-                        <th className="py-3 px-3 text-right text-[#D8D6D4]">
+                        <th className="py-3 px-3 text-center text-[#D8D6D4]">
                           Raw Base Cost
                         </th>
-                        <th className="py-3 px-3 text-right text-amber-400">
+                        <th className="py-3 px-3 text-center text-amber-400">
                           Etsy Listing Price
                         </th>
-                        <th className="py-3 px-3 text-right text-emerald-400">
+                        <th className="py-3 px-3 text-center text-emerald-400">
                           Active Sale Price
                         </th>
-                        <th className="py-3 px-4 text-right text-indigo-400">
+                        <th className="py-3 px-4 text-center text-indigo-400">
                           Net Profit
                         </th>
                       </tr>
@@ -2222,23 +2222,23 @@ function doPost(e) {
                           <td className="py-3.5 px-4 font-bold font-sans text-[#DAD9D6]">
                             {item.metalName}
                           </td>
-                          <td className="py-3.5 px-3 text-right text-[#D8D6D4] font-mono">
+                          <td className="py-3.5 px-3 text-center text-[#D8D6D4] font-mono">
                             {item.effectiveWeight}g
                           </td>{" "}
                           {/* Render dynamic weight */}
-                          <td className="py-3.5 px-3 text-right text-[#D8D6D4]">
+                          <td className="py-3.5 px-3 text-center text-[#D8D6D4]">
                             {currencySymbol}
                             {item.totalBaseCost}
                           </td>
-                          <td className="py-3.5 px-3 text-right font-bold text-amber-400">
+                          <td className="py-3.5 px-3 text-center font-bold text-amber-400">
                             {currencySymbol}
                             {item.listingPrice}
                           </td>
-                          <td className="py-3.5 px-3 text-right font-bold text-emerald-400">
+                          <td className="py-3.5 px-3 text-center font-bold text-emerald-400">
                             {currencySymbol}
                             {item.salePrice}
                           </td>
-                          <td className="py-3.5 px-4 text-right font-bold text-indigo-400">
+                          <td className="py-3.5 px-4 text-center font-bold text-indigo-400">
                             {currencySymbol}
                             {item.actualNetProfit}
                           </td>
