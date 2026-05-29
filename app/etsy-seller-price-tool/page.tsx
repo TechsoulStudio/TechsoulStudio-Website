@@ -574,25 +574,108 @@ export default function App() {
   }, [selectedCategories]);
 
   // Helper routine to execute the sequential pricing pipeline for any category/rates
+  // const calculateCategoryPrices = (mainRate: number, sideRate: number) => {
+  //   const metals = [
+  //     { name: "Silver", ratePerGram: silverPerGram, key: "silver" },
+  //     { name: "Gold 10K", ratePerGram: gold10kPerGram, key: "g10k" },
+  //     { name: "Gold 14K", ratePerGram: gold14kPerGram, key: "g14k" },
+  //     { name: "Gold 18K", ratePerGram: gold18kPerGram, key: "g18k" },
+  //     { name: "Platinum", ratePerGram: platinumPerGram, key: "platinum" },
+  //   ];
+
+  //   // const flatOtherCharges = parseFloat(otherCharges) || 0;
+  //   const flatOtherCharges = Number(otherCharges) || 0;
+
+  //   return metals.map((metal) => {
+  //     const metalCost = metalWeight * metal.ratePerGram;
+  //     const laborCost = metalWeight * laborPerGram;
+  //     const mainStoneCost = mainStoneWeight * mainRate;
+  //     const sideStoneCost = sideStoneWeight * sideRate;
+
+  //     // Raw cost adds metal + labor + main + side + absolute flat other charges in Rs
+  //     const totalBaseCost =
+  //       metalCost +
+  //       laborCost +
+  //       mainStoneCost +
+  //       sideStoneCost +
+  //       flatOtherCharges;
+
+  //     // Pipeline Steps (Restored Reverse Discount Method to guard profit percentages):
+  //     // Step A: Base making price + Etsy fee %
+  //     const costWithEtsyFee = totalBaseCost * (1 + etsyFeePercent / 100);
+
+  //     // Step B: Add Profit Margin % (This establishes the Sale Price)
+  //     const salePrice = costWithEtsyFee * (1 + profitPercent / 100);
+
+  //     // Step C: REVERSED DISCOUNT FORMULA
+  //     // Listing Price = Sale Price / (1 - Sale %)
+  //     const divisorSale = 1 - salePercent / 100;
+  //     const listingPrice =
+  //       divisorSale > 0 ? salePrice / divisorSale : salePrice;
+
+  //     // Calculated Net profits & Fee Breakdown
+  //     const actualEtsyFeeAmount = salePrice * (etsyFeePercent / 100);
+  //     const actualNetProfit = salePrice - actualEtsyFeeAmount - totalBaseCost;
+
+  //     return {
+  //       metalName: metal.name,
+  //       metalKey: metal.key,
+  //       totalBaseCost: totalBaseCost.toFixed(2),
+  //       listingPrice: listingPrice.toFixed(2),
+  //       salePrice: salePrice.toFixed(2),
+  //       actualNetProfit: actualNetProfit.toFixed(2),
+  //     };
+  //   });
+  // };
+
   const calculateCategoryPrices = (mainRate: number, sideRate: number) => {
+    // 18K Gold density baseline weight conversion multipliers
     const metals = [
-      { name: "Silver", ratePerGram: silverPerGram, key: "silver" },
-      { name: "Gold 10K", ratePerGram: gold10kPerGram, key: "g10k" },
-      { name: "Gold 14K", ratePerGram: gold14kPerGram, key: "g14k" },
-      { name: "Gold 18K", ratePerGram: gold18kPerGram, key: "g18k" },
-      { name: "Platinum", ratePerGram: platinumPerGram, key: "platinum" },
+      {
+        name: "Silver",
+        ratePerGram: silverPerGram,
+        key: "silver",
+        weightMultiplier: 0.67,
+      },
+      {
+        name: "Gold 10K",
+        ratePerGram: gold10kPerGram,
+        key: "g10k",
+        weightMultiplier: 0.74,
+      },
+      {
+        name: "Gold 14K",
+        ratePerGram: gold14kPerGram,
+        key: "g14k",
+        weightMultiplier: 0.84,
+      },
+      {
+        name: "Gold 18K",
+        ratePerGram: gold18kPerGram,
+        key: "g18k",
+        weightMultiplier: 1.0,
+      }, // baseline
+      {
+        name: "Platinum",
+        ratePerGram: platinumPerGram,
+        key: "platinum",
+        weightMultiplier: 1.33,
+      },
     ];
 
-    // const flatOtherCharges = parseFloat(otherCharges) || 0;
     const flatOtherCharges = Number(otherCharges) || 0;
 
     return metals.map((metal) => {
-      const metalCost = metalWeight * metal.ratePerGram;
-      const laborCost = metalWeight * laborPerGram;
+      // 1. Automatically calculate the physical weight based on the baseline 18K gold specific gravity
+      const effectiveWeight = metalWeight * metal.weightMultiplier;
+
+      // 2. Use this corrected "effectiveWeight" for metal & labor pricing
+      const metalCost = effectiveWeight * metal.ratePerGram;
+      const laborCost = effectiveWeight * laborPerGram;
       const mainStoneCost = mainStoneWeight * mainRate;
       const sideStoneCost = sideStoneWeight * sideRate;
 
-      // Raw cost adds metal + labor + main + side + absolute flat other charges in Rs
+      // Raw cost adds metal + labor + main + side + other charges
       const totalBaseCost =
         metalCost +
         laborCost +
@@ -600,7 +683,6 @@ export default function App() {
         sideStoneCost +
         flatOtherCharges;
 
-      // Pipeline Steps (Restored Reverse Discount Method to guard profit percentages):
       // Step A: Base making price + Etsy fee %
       const costWithEtsyFee = totalBaseCost * (1 + etsyFeePercent / 100);
 
@@ -608,7 +690,6 @@ export default function App() {
       const salePrice = costWithEtsyFee * (1 + profitPercent / 100);
 
       // Step C: REVERSED DISCOUNT FORMULA
-      // Listing Price = Sale Price / (1 - Sale %)
       const divisorSale = 1 - salePercent / 100;
       const listingPrice =
         divisorSale > 0 ? salePrice / divisorSale : salePrice;
@@ -624,6 +705,7 @@ export default function App() {
         listingPrice: listingPrice.toFixed(2),
         salePrice: salePrice.toFixed(2),
         actualNetProfit: actualNetProfit.toFixed(2),
+        effectiveWeight: effectiveWeight.toFixed(2), // Added so it can be rendered on the screen
       };
     });
   };
@@ -1666,7 +1748,7 @@ function doPost(e) {
 
                   <div className="space-y-1.5 col-span-2">
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
-                      Metal Weight (g)
+                      18K Metal Weight (g)
                     </label>
                     <input
                       type="number"
@@ -2001,7 +2083,7 @@ function doPost(e) {
                     className="bg-[#F1641E] text-[#DAD9D6] font-bold px-4 py-2 rounded-lg text-md flex items-center gap-1.5 transition-all shadow"
                   >
                     <Plus className="h-4 w-4 stroke-[3.5]" />
-                    Add to Excel
+                    Add to Sheet
                   </button>
                 </div>
               </div>
@@ -2029,7 +2111,7 @@ function doPost(e) {
                       className="bg-[#F1641E] text-[#DAD9D6] font-bold px-4 py-2 rounded-lg text-md flex items-center gap-1.5 transition-all shadow"
                     >
                       <Plus className="h-4 w-4 stroke-[3.5]" />
-                      Add to Excel
+                      Add to Sheet
                     </button>
                     <button
                       onClick={downloadExcelSheet}
@@ -2060,7 +2142,7 @@ function doPost(e) {
 
                 <div className="overflow-x-auto rounded-xl border border-[#4d4f4c] bg-[#363835]">
                   <table className="w-full text-left">
-                    <thead>
+                    {/* <thead>
                       <tr className="bg-[#424441] border-b border-[#4d4f4c] text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
                         <th className="py-3 px-4 text-[#DAD9D6]">
                           Metal Purity ({previewTab})
@@ -2088,6 +2170,62 @@ function doPost(e) {
                           <td className="py-3.5 px-4 font-bold font-sans text-[#DAD9D6]">
                             {item.metalName}
                           </td>
+                          <td className="py-3.5 px-3 text-right text-[#D8D6D4]">
+                            {currencySymbol}
+                            {item.totalBaseCost}
+                          </td>
+                          <td className="py-3.5 px-3 text-right font-bold text-amber-400">
+                            {currencySymbol}
+                            {item.listingPrice}
+                          </td>
+                          <td className="py-3.5 px-3 text-right font-bold text-emerald-400">
+                            {currencySymbol}
+                            {item.salePrice}
+                          </td>
+                          <td className="py-3.5 px-4 text-right font-bold text-indigo-400">
+                            {currencySymbol}
+                            {item.actualNetProfit}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody> */}
+
+                    <thead>
+                      <tr className="bg-[#424441] border-b border-[#4d4f4c] text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
+                        <th className="py-3 px-4 text-[#DAD9D6]">
+                          Metal Purity ({previewTab})
+                        </th>
+                        <th className="py-3 px-3 text-right text-[#D8D6D4]">
+                          Calculated Weight
+                        </th>{" "}
+                        {/* Added column */}
+                        <th className="py-3 px-3 text-right text-[#D8D6D4]">
+                          Raw Base Cost
+                        </th>
+                        <th className="py-3 px-3 text-right text-amber-400">
+                          Etsy Listing Price
+                        </th>
+                        <th className="py-3 px-3 text-right text-emerald-400">
+                          Active Sale Price
+                        </th>
+                        <th className="py-3 px-4 text-right text-indigo-400">
+                          Net Profit
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#4d4f4c] text-md">
+                      {getActivePreviewData().map((item, idx) => (
+                        <tr
+                          key={idx}
+                          className="hover:bg-[#424441]/40 transition-colors"
+                        >
+                          <td className="py-3.5 px-4 font-bold font-sans text-[#DAD9D6]">
+                            {item.metalName}
+                          </td>
+                          <td className="py-3.5 px-3 text-right text-[#D8D6D4] font-mono">
+                            {item.effectiveWeight}g
+                          </td>{" "}
+                          {/* Render dynamic weight */}
                           <td className="py-3.5 px-3 text-right text-[#D8D6D4]">
                             {currencySymbol}
                             {item.totalBaseCost}
