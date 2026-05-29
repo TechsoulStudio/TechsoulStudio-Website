@@ -1344,9 +1344,9 @@ function doPost(e) {
       <header className="border-b border-[#6e716d] bg-[#424441]/60 backdrop-blur-md sticky top-0 z-50 py-3">
         <div className="max-w-8xl mx-auto px-10 flex items-center justify-between">
           <div>
-            <span className="text-4xl font-bold block cursor-pointer">
+            <Link href="/" className="text-4xl font-bold block cursor-pointer">
               TechsoulStudio
-            </span>
+            </Link>
             <p className="text-lg text-[#DAD9D6] font-medium">
               Best Etsy Management Agency in Surat
             </p>
@@ -1380,13 +1380,13 @@ function doPost(e) {
         </div>
       </header>
 
-      <div className="max-w-8xl mx-auto px-10 flex items-center justify-between pt-3">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-[#DAD9D6] flex items-center gap-1.5 font-sans">
+      <div className="max-w-8xl mx-auto px-10 flex items-center justify-center pt-3">
+        <div className="flex items-center gap-3 ">
+          <div className="text-center flex flex-col">
+            <h1 className="text-2xl font-bold tracking-tight text-[#DAD9D6] flex items-center gap-1.5 text-center justify-center">
               Etsy Jewelry Profit Calculator for Sellers
             </h1>
-            <p className="text-lg text-[#DAD9D6] font-medium">
+            <p className="text-lg text-[#DAD9D6] font-medium text-center">
               Calculate Etsy jewelry pricing, fees, profits, and revenue
               instantly.
             </p>
