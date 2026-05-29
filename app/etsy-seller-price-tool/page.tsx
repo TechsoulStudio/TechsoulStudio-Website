@@ -21,98 +21,42 @@ import {
   Tag,
   Gem,
   CircleUser,
+  LogOut,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { Eye, EyeOff, X } from "lucide-react";
 
 // Firebase App persistence imports safely integrated
-import { initializeApp, getApps, getApp } from "firebase/app";
-import {
-  getAuth,
-  signInWithCustomToken,
-  signInAnonymously,
-  onAuthStateChanged,
-} from "firebase/auth";
-import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
+// import { initializeApp, getApps, getApp } from "firebase/app";
+// import {
+//   getAuth,
+//   signInWithCustomToken,
+//   signInAnonymously,
+//   onAuthStateChanged,
+// } from "firebase/auth";
+// import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 import { RiMenu3Fill } from "react-icons/ri";
 import Menu from "@/components/helper/Menu";
 import Footer from "@/components/helper/Footer";
 import Link from "next/link";
 
 // Initialize Firebase dynamically to ensure no crashes on local setups without configuration
-let app: any;
-let auth: any;
-let db: any;
-const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
+// let app: any;
+// let auth: any;
+// let db: any;
+// // const appId = typeof __app_id !== "undefined" ? __app_id : "default-app-id";
 
-try {
-  if (typeof __firebase_config !== "undefined" && __firebase_config) {
-    const firebaseConfig = JSON.parse(__firebase_config);
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    auth = getAuth(app);
-    db = getFirestore(app);
-  }
-} catch (e) {
-  console.warn("Firebase initialization skipped or failed:", e);
-}
+// const appId = "default-app-id";
 
-// Inline Replacement for Menu component to make page.tsx fully self-contained
-// function Menu({ onClose }) {
-//   return (
-//     <div className="fixed inset-0 bg-[#363835]/95 z-50 flex flex-col items-center justify-center space-y-6 text-2xl font-bold text-[#DAD9D6]">
-//       <button
-//         onClick={onClose}
-//         className="absolute top-6 right-6 text-4xl text-[#BCBCB4] hover:text-white cursor-pointer"
-//       >
-//         &times;
-//       </button>
-//       <a
-//         href="#"
-//         onClick={onClose}
-//         className="hover:text-[#F1641E] transition-colors"
-//       >
-//         Home
-//       </a>
-//       <a
-//         href="#"
-//         onClick={onClose}
-//         className="hover:text-[#F1641E] transition-colors"
-//       >
-//         Services
-//       </a>
-//       <a
-//         href="#"
-//         onClick={onClose}
-//         className="hover:text-[#F1641E] transition-colors"
-//       >
-//         Etsy Calculator
-//       </a>
-//       <a
-//         href="#"
-//         onClick={onClose}
-//         className="hover:text-[#F1641E] transition-colors"
-//       >
-//         Contact
-//       </a>
-//     </div>
-//   );
-// }
-
-// Inline Replacement for Footer component to make page.tsx fully self-contained
-// function Footer() {
-//   return (
-//     <footer className="border-t border-[#6e716d] bg-[#424441]/40 py-8 px-10 text-center text-[#BCBCB4]">
-//       <div className="max-w-8xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-//         <p className="text-md">
-//           © 2026 TechsoulStudio. All rights reserved. Built for maximized
-//           artisan profits.
-//         </p>
-//         <p className="text-md font-mono text-[#DAD9D6]">
-//           Need Help? WhatsApp: +91 99795 59639
-//         </p>
-//       </div>
-//     </footer>
-//   );
+// try {
+//   if (typeof __firebase_config !== "undefined" && __firebase_config) {
+//     const firebaseConfig = JSON.parse(__firebase_config);
+//     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+//     auth = getAuth(app);
+//     db = getFirestore(app);
+//   }
+// } catch (e) {
+//   console.warn("Firebase initialization skipped or failed:", e);
 // }
 
 // Inline SVG components to replace external react-icons
@@ -150,6 +94,7 @@ export default function App() {
   const [openMenu, setOpenMenu] = useState(false);
   const [openLoginModal, setOpenLoginModal] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const [loginData, setLoginData] = useState({
     email: "",
@@ -164,6 +109,7 @@ export default function App() {
   const [signupData, setSignupData] = useState({
     name: "",
     email: "",
+    mobile: "",
     password: "",
     confirmPassword: "",
   });
@@ -254,12 +200,19 @@ export default function App() {
   //   }
   //   return [];
   // });
-  const [excelRows, setExcelRows] = useState([]);
+  // const [excelRows, setExcelRows] = useState([]);
+  const [excelRows, setExcelRows] = useState<any[]>([]);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
   // Confirmation Modal State
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [confirmModalData, setConfirmModalData] = useState({
-    type: "single", // "single" | "all"
+  const [confirmModalData, setConfirmModalData] = useState<{
+    type: "single" | "all";
+    index: number | null;
+    sku: string;
+    srNo: number | null;
+  }>({
+    type: "single",
     index: null,
     sku: "",
     srNo: null,
@@ -271,7 +224,7 @@ export default function App() {
   const [currencySymbol, setCurrencySymbol] = useState("₹");
 
   // Firebase user state
-  const [fbUser, setFbUser] = useState(null);
+  // const [fbUser, setFbUser] = useState(null);
 
   // Preview tab within the Live Pricing matrix (Moissanite, Lab Grown, or Natural view)
   const [previewTab, setPreviewTab] = useState("Moissanite");
@@ -287,51 +240,51 @@ export default function App() {
   const platinumPerGram = gold24kPerGram * platinumRatio;
 
   // Authentication & Settings Data Stream listener
-  useEffect(() => {
-    if (!auth) return;
-    const initAuth = async () => {
-      try {
-        if (
-          typeof __initial_auth_token !== "undefined" &&
-          __initial_auth_token
-        ) {
-          await signInWithCustomToken(auth, __initial_auth_token);
-        } else {
-          await signInAnonymously(auth);
-        }
-      } catch (err) {
-        console.warn("Auth initialization skipped:", err);
-      }
-    };
-    initAuth();
-    const unsubscribe = onAuthStateChanged(auth, setFbUser);
-    return () => unsubscribe();
-  }, []);
+  // useEffect(() => {
+  //   if (!auth) return;
+  //   const initAuth = async () => {
+  //     try {
+  //       if (
+  //         typeof __initial_auth_token !== "undefined" &&
+  //         __initial_auth_token
+  //       ) {
+  //         await signInWithCustomToken(auth, __initial_auth_token);
+  //       } else {
+  //         await signInAnonymously(auth);
+  //       }
+  //     } catch (err) {
+  //       console.warn("Auth initialization skipped:", err);
+  //     }
+  //   };
+  //   initAuth();
+  //   const unsubscribe = onAuthStateChanged(auth, setFbUser);
+  //   return () => unsubscribe();
+  // }, []);
 
   // Fetch the saved Web App URL from the database once authenticated
-  useEffect(() => {
-    if (!db || !fbUser) return;
-    const loadSavedSettings = async () => {
-      try {
-        const docRef = doc(
-          db,
-          "artifacts",
-          appId,
-          "users",
-          fbUser.uid,
-          "settings",
-          "config",
-        );
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().webAppUrl) {
-          setWebAppUrl(docSnap.data().webAppUrl);
-        }
-      } catch (err) {
-        console.error("Failed to fetch saved URL config:", err);
-      }
-    };
-    loadSavedSettings();
-  }, [fbUser]);
+  // useEffect(() => {
+  //   if (!db || !fbUser) return;
+  //   const loadSavedSettings = async () => {
+  //     try {
+  //       const docRef = doc(
+  //         db,
+  //         "artifacts",
+  //         appId,
+  //         "users",
+  //         fbUser.uid,
+  //         "settings",
+  //         "config",
+  //       );
+  //       const docSnap = await getDoc(docRef);
+  //       if (docSnap.exists() && docSnap.data().webAppUrl) {
+  //         setWebAppUrl(docSnap.data().webAppUrl);
+  //       }
+  //     } catch (err) {
+  //       console.error("Failed to fetch saved URL config:", err);
+  //     }
+  //   };
+  //   loadSavedSettings();
+  // }, [fbUser]);
 
   useEffect(() => {
     localStorage.setItem("etsyExcelRows", JSON.stringify(excelRows));
@@ -341,24 +294,47 @@ export default function App() {
     getMyProducts();
   }, []);
 
-  // Saves the Web App URL config securely inside the user-specific settings path
-  const saveUrlConfig = async (url) => {
-    if (!db || !fbUser) return;
-    try {
-      const docRef = doc(
-        db,
-        "artifacts",
-        appId,
-        "users",
-        fbUser.uid,
-        "settings",
-        "config",
-      );
-      await setDoc(docRef, { webAppUrl: url }, { merge: true });
-    } catch (err) {
-      console.error("Failed to persist URL config:", err);
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    const expiry = localStorage.getItem("tokenExpiry");
+
+    if (!token || !expiry) {
+      setIsLoggedIn(false);
+      return;
     }
-  };
+
+    if (Date.now() > Number(expiry)) {
+      localStorage.removeItem("userToken");
+      localStorage.removeItem("tokenExpiry");
+
+      setExcelRows([]);
+      setIsLoggedIn(false);
+
+      toast.error("Session expired. Please login again.");
+      return;
+    }
+
+    setIsLoggedIn(true);
+  }, []);
+
+  // Saves the Web App URL config securely inside the user-specific settings path
+  // const saveUrlConfig = async (url) => {
+  //   if (!db || !fbUser) return;
+  //   try {
+  //     const docRef = doc(
+  //       db,
+  //       "artifacts",
+  //       appId,
+  //       "users",
+  //       fbUser.uid,
+  //       "settings",
+  //       "config",
+  //     );
+  //     await setDoc(docRef, { webAppUrl: url }, { merge: true });
+  //   } catch (err) {
+  //     console.error("Failed to persist URL config:", err);
+  //   }
+  // };
 
   const handleLogin = async () => {
     try {
@@ -389,7 +365,16 @@ export default function App() {
 
       toast.success("Login successful");
 
+      // localStorage.setItem("userToken", data.token);
+
       localStorage.setItem("userToken", data.token);
+
+      const expiryTime = Date.now() + 7 * 24 * 60 * 60 * 1000;
+      localStorage.setItem("tokenExpiry", expiryTime.toString());
+
+      setIsLoggedIn(true);
+
+      await getMyProducts();
 
       setOpenLoginModal(false);
 
@@ -405,15 +390,37 @@ export default function App() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("userToken");
+    localStorage.removeItem("tokenExpiry");
+    localStorage.removeItem("etsyExcelRows");
+
+    setExcelRows([]);
+    setIsLoggedIn(false);
+
+    toast.success("Logout successful");
+  };
+
   const handleSignup = async () => {
     try {
       if (
         !signupData.name ||
         !signupData.email ||
+        !signupData.mobile ||
         !signupData.password ||
         !signupData.confirmPassword
       ) {
         toast.error("All fields are required");
+        return;
+      }
+
+      if (!/^\d{10}$/.test(signupData.mobile)) {
+        toast.error("Mobile number must be exactly 10 digits");
+        return;
+      }
+
+      if (signupData.password.length < 8) {
+        toast.error("Password must be at least 8 characters");
         return;
       }
 
@@ -450,6 +457,7 @@ export default function App() {
       setSignupData({
         name: "",
         email: "",
+        mobile: "",
         password: "",
         confirmPassword: "",
       });
@@ -566,7 +574,7 @@ export default function App() {
   }, [selectedCategories]);
 
   // Helper routine to execute the sequential pricing pipeline for any category/rates
-  const calculateCategoryPrices = (mainRate, sideRate) => {
+  const calculateCategoryPrices = (mainRate: number, sideRate: number) => {
     const metals = [
       { name: "Silver", ratePerGram: silverPerGram, key: "silver" },
       { name: "Gold 10K", ratePerGram: gold10kPerGram, key: "g10k" },
@@ -575,7 +583,8 @@ export default function App() {
       { name: "Platinum", ratePerGram: platinumPerGram, key: "platinum" },
     ];
 
-    const flatOtherCharges = parseFloat(otherCharges) || 0;
+    // const flatOtherCharges = parseFloat(otherCharges) || 0;
+    const flatOtherCharges = Number(otherCharges) || 0;
 
     return metals.map((metal) => {
       const metalCost = metalWeight * metal.ratePerGram;
@@ -632,7 +641,7 @@ export default function App() {
   };
 
   // Toggle multi-select categories safely
-  const toggleCategory = (category) => {
+  const toggleCategory = (category: string) => {
     if (selectedCategories.includes(category)) {
       if (selectedCategories.length > 1) {
         setSelectedCategories((prev) => prev.filter((c) => c !== category));
@@ -644,6 +653,12 @@ export default function App() {
 
   // Calculates, appends to local log, and streams to Google Sheets Web App
   const addCurrentSKUToExcel = async () => {
+    const token = localStorage.getItem("userToken");
+
+    if (!token) {
+      setShowLoginRequiredModal(true);
+      return;
+    }
     if (selectedCategories.length === 0) {
       alert("Please select at least one active stone category in Step 1.");
       return;
@@ -656,8 +671,8 @@ export default function App() {
     const labCalculations = calculateCategoryPrices(labMainRate, labSideRate);
     const natCalculations = calculateCategoryPrices(natMainRate, natSideRate);
 
-    const getPriceValue = (dataset, metalKey) => {
-      const found = dataset.find((item) => item.metalKey === metalKey);
+    const getPriceValue = (dataset: any, metalKey: string) => {
+      const found = dataset.find((item: any) => item.metalKey === metalKey);
       if (!found) return "";
       return exportPriceType === "listing"
         ? found.listingPrice
@@ -728,7 +743,7 @@ export default function App() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            authorization: token,
+            authorization: token || "",
           },
           body: JSON.stringify(newRow),
         },
@@ -841,7 +856,7 @@ export default function App() {
   };
 
   // Initiates single row delete confirmation modal
-  const confirmRemoveExcelRow = (index) => {
+  const confirmRemoveExcelRow = (index: number) => {
     const row = excelRows[index];
     setConfirmModalData({
       type: "single",
@@ -880,7 +895,7 @@ export default function App() {
             {
               method: "DELETE",
               headers: {
-                authorization: token,
+                authorization: token || "",
               },
             },
           );
@@ -949,7 +964,7 @@ export default function App() {
             {
               method: "DELETE",
               headers: {
-                authorization: token,
+                authorization: token || "",
               },
             },
           );
@@ -983,7 +998,7 @@ export default function App() {
   // Modern Native XLSX Sheet Exporter utilizing SheetJS with dynamic import safeguards
   const downloadExcelSheet = () => {
     const runExport = () => {
-      const XLSX = window.XLSX;
+      const XLSX = (window as any).XLSX;
       if (!XLSX) return;
 
       const aoaData = [
@@ -1081,7 +1096,7 @@ export default function App() {
       );
     };
 
-    if (!window.XLSX) {
+    if (!(window as any).XLSX) {
       setSuccessAlert("Preparing Excel download module...");
       const script = document.createElement("script");
       script.src =
@@ -1099,7 +1114,7 @@ export default function App() {
     }
   };
 
-  const handleCopyToClipboard = (text, type) => {
+  const handleCopyToClipboard = (text = "", type = "sku") => {
     const dummy = document.createElement("textarea");
     document.body.appendChild(dummy);
     dummy.value = text;
@@ -1273,6 +1288,58 @@ function doPost(e) {
         </div>
       )}
 
+      {showLoginRequiredModal && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+            onClick={() => setShowLoginRequiredModal(false)}
+          />
+
+          <div className="relative bg-[#424441] border border-[#6e716d] rounded-3xl max-w-md w-full p-8 shadow-[0_20px_80px_rgba(0,0,0,0.5)]">
+            <div className="flex justify-center mb-5">
+              <div className="h-20 w-20 rounded-full bg-[#F1641E]/15 border border-[#F1641E]/30 flex items-center justify-center">
+                <CircleUser className="h-10 w-10 text-[#F1641E]" />
+              </div>
+            </div>
+
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Login Required
+              </h2>
+
+              <p className="text-[#BCBCB4] leading-relaxed">
+                Please login first to save products in your Etsy catalog, manage
+                pricing records, and access your personal inventory.
+              </p>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <button
+                onClick={() => {
+                  setShowLoginRequiredModal(false);
+                  setOpenLoginModal(true);
+                }}
+                className="w-full py-3 rounded-xl bg-[#F1641E] hover:bg-[#d85312] text-white font-bold transition-all cursor-pointer"
+              >
+                Login Now
+              </button>
+
+              <button
+                onClick={() => setShowLoginRequiredModal(false)}
+                className="w-full py-3 rounded-xl border border-[#6e716d] text-[#BCBCB4] hover:bg-[#363835] transition-all cursor-pointer"
+              >
+                Maybe Later
+              </button>
+            </div>
+
+            <div className="mt-5 flex items-center justify-center gap-2 text-xs text-[#8e908d]">
+              <Check className="h-4 w-4 text-green-500" />
+              Secure account-based product storage
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Top Banner / Navigation Header */}
       <header className="border-b border-[#6e716d] bg-[#424441]/60 backdrop-blur-md sticky top-0 z-50 py-3">
         <div className="max-w-8xl mx-auto px-10 flex items-center justify-between">
@@ -1285,13 +1352,21 @@ function doPost(e) {
             </p>
           </div>
           <div className="fixed top-4 right-10 z-50 flex items-center gap-3">
-            <button
-              onClick={() => setOpenLoginModal(true)}
-              className=" text-[#DAD9D6] cursor-pointer"
-            >
-              <CircleUser className="h-8 w-8 stroke-[2]" strokeWidth={1.5} />
-              <span className="sr-only">Contact Us</span>
-            </button>
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="text-[#DAD9D6] cursor-pointer"
+              >
+                <LogOut className="h-8 w-8 stroke-[2]" />
+              </button>
+            ) : (
+              <button
+                onClick={() => setOpenLoginModal(true)}
+                className="text-[#DAD9D6] cursor-pointer"
+              >
+                <CircleUser className="h-8 w-8 stroke-[2]" />
+              </button>
+            )}
             <button
               onClick={() => setOpenMenu(true)}
               className=" text-white cursor-pointer"
@@ -2037,269 +2112,272 @@ function doPost(e) {
               </div>
 
               {/* Card 5: EXCEL SPREADSHEET SIMULATOR (Single Row Aligned) */}
-              <div className="bg-[#424441] rounded-2xl border border-[#6e716d] p-5 shadow-xl flex flex-col">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-[#6e716d]">
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <FileSpreadsheet className="h-5 w-5 text-[#F1641E]" />
-                      <h3 className="text-xl uppercase font-bold text-[#F1641E]">
-                        Live Excel Log Sheet
-                      </h3>
+              {isLoggedIn && (
+                <div className="bg-[#424441] rounded-2xl border border-[#6e716d] p-5 shadow-xl flex flex-col">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-3 border-b border-[#6e716d]">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <FileSpreadsheet className="h-5 w-5 text-[#F1641E]" />
+                        <h3 className="text-xl uppercase font-bold text-[#F1641E]">
+                          Live Excel Log Sheet
+                        </h3>
+                      </div>
+                      <p className="text-md text-[#DAD9D6]">
+                        Populating multiple columns on the same row sku-wise
+                      </p>
                     </div>
-                    <p className="text-md text-[#DAD9D6]">
-                      Populating multiple columns on the same row sku-wise
-                    </p>
-                  </div>
-                  <div className="flex gap-5">
-                    {excelRows.length > 0 && (
+                    <div className="flex gap-5">
+                      {excelRows.length > 0 && (
+                        <button
+                          onClick={confirmClearExcelLog}
+                          className="text-md text-red-300 hover:text-red-200 font-semibold flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-lg border border-red-500/20 self-start"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Clear Sheet
+                        </button>
+                      )}
                       <button
-                        onClick={confirmClearExcelLog}
-                        className="text-md text-red-300 hover:text-red-200 font-semibold flex items-center gap-1 bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-lg border border-red-500/20 self-start"
+                        onClick={downloadExcelSheet}
+                        className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-md flex items-center gap-1.5 transition-all shadow"
                       >
-                        <Trash2 className="h-4 w-4" />
-                        Clear Sheet
+                        <Download className="h-4 w-4 stroke-[3]" />
+                        Download Sheet
                       </button>
-                    )}
-                    <button
-                      onClick={downloadExcelSheet}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold px-4 py-2 rounded-lg text-md flex items-center gap-1.5 transition-all shadow"
-                    >
-                      <Download className="h-4 w-4 stroke-[3]" />
-                      Download Sheet
-                    </button>
+                    </div>
                   </div>
-                </div>
 
-                {excelRows.length === 0 ? (
-                  <div className="p-12 text-center text-xs text-[#DAD9D6]/60 border border-dashed border-[#6e716d] rounded-xl bg-[#363835]/40">
-                    No active entries saved in Excel. Setup your specs, specify
-                    categories, and click "Add to Excel" to append SKU details.
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto rounded-xl border border-[#6e716d] bg-[#363835] max-h-[550px]">
-                    <table
-                      className="w-full text-left text-md border-collapse"
-                      style={{ minWidth: "2000px" }}
-                    >
-                      <thead>
-                        {/* Top Row Category Grouping */}
-                        <tr className="bg-[#424441] border-b border-[#4d4f4c] text-md font-bold text-[#DAD9D6] uppercase tracking-wider text-center">
-                          <th
-                            colSpan="4"
-                            className="py-2 border-r border-[#4d4f4c]"
-                          >
-                            General Metadata
-                          </th>
-                          <th
-                            colSpan="1"
-                            className="py-2 border-r border-[#4d4f4c] bg-[#363835] text-indigo-400"
-                          >
-                            SIDE
-                          </th>
-                          <th
-                            colSpan="1"
-                            className="py-2 border-r border-[#4d4f4c]"
-                          >
-                            Size
-                          </th>
-                          <th
-                            colSpan="1"
-                            className="py-2 border-r border-[#4d4f4c] bg-[#363835] text-[#F1641E]"
-                          >
-                            MAIN
-                          </th>
-                          <th
-                            colSpan="5"
-                            className="py-2 border-r border-[#4d4f4c] bg-blue-900/20 text-blue-300"
-                          >
-                            Moissanite Columns (MOSO)
-                          </th>
-                          <th
-                            colSpan="5"
-                            className="py-2 border-r border-[#4d4f4c] bg-cyan-900/20 text-cyan-300"
-                          >
-                            Lab Grown Columns (LAB)
-                          </th>
-                          <th
-                            colSpan="5"
-                            className="py-2 bg-emerald-900/20 text-emerald-300"
-                          >
-                            Natural Diamond Columns (NAT)
-                          </th>
-                        </tr>
-
-                        {/* Main Row Header */}
-                        <tr className="bg-[#424441]/90 border-b border-[#4d4f4c] text-sm font-bold uppercase text-[#DAD9D6]">
-                          <th className="py-3 px-3 border-r border-[#4d4f4c]">
-                            SR.NO
-                          </th>
-                          <th className="py-3 px-3 border-r border-[#4d4f4c]">
-                            ITEM
-                          </th>
-                          <th className="py-3 px-3 border-r border-[#4d4f4c]">
-                            SKU
-                          </th>
-                          <th className="py-3 px-3 border-r border-[#4d4f4c]">
-                            SHAPE
-                          </th>
-                          <th className="py-3 px-3 border-r border-[#4d4f4c] bg-[#424441]/40">
-                            DIA WT.
-                          </th>
-                          <th className="py-3 px-3 border-r border-[#4d4f4c]">
-                            SOL MM
-                          </th>
-                          <th className="py-3 px-3 border-r border-[#4d4f4c] bg-[#424441]/40">
-                            SOL WT.
-                          </th>
-
-                          {/* Moissanite Purities */}
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-blue-900/10">
-                            SIL MOSO
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-blue-400 bg-blue-900/10">
-                            10K MOSO
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-blue-300 bg-blue-900/10">
-                            14K MOSO
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-400 bg-blue-900/10">
-                            18K MOSO
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-blue-900/15">
-                            Plat Moso
-                          </th>
-
-                          {/* Lab Grown Purities */}
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-cyan-900/10">
-                            SIL LAB
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-cyan-400 bg-cyan-900/10">
-                            10K LAB
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-cyan-300 bg-cyan-900/10">
-                            14K LAB
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-400 bg-cyan-900/10">
-                            18K LAB
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-cyan-900/15">
-                            Plat Lab
-                          </th>
-
-                          {/* Natural Purities */}
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-emerald-900/10">
-                            SIL NAT
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-455 bg-emerald-900/10">
-                            10K NAT
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-300 bg-emerald-900/10">
-                            14K NAT
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-green-400 bg-emerald-900/10">
-                            18K NAT
-                          </th>
-                          <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-emerald-900/15">
-                            Plat Nat
-                          </th>
-
-                          <th className="py-3 px-2 text-center">Delete</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#4d4f4c]">
-                        {excelRows.map((row, index) => (
-                          <tr
-                            key={index}
-                            className="hover:bg-[#424441]/30 text-sm transition-all"
-                          >
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]/70">
-                              {row.srNo}
-                            </td>
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] font-sans font-medium text-[#BCBCB4]">
-                              {row.item}
-                            </td>
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]/80">
-                              {row.sku}
-                            </td>
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]">
-                              {row.shape}
-                            </td>
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20">
-                              {row.sideDiaWt}
-                            </td>
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center">
-                              {row.solMm}
-                            </td>
-                            <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20">
-                              {row.solWt}
-                            </td>
-
-                            {/* Moissanite columns */}
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-[#DAD9D6]/80">
-                              {row.silMoso}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-blue-400 font-bold">
-                              {row.g10kMoso}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-blue-300 font-bold">
-                              {row.g14kMoso}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-emerald-400 font-bold">
-                              {row.g18kMoso}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/30 text-amber-400 font-bold">
-                              {row.platMoso}
-                            </td>
-
-                            {/* Lab Grown columns */}
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-[#DAD9D6]/80">
-                              {row.silLab}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-400 font-bold">
-                              {row.g10kLab}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-300 font-bold">
-                              {row.g14kLab}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-emerald-400 font-bold">
-                              {row.g18kLab}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/30 text-amber-400 font-bold">
-                              {row.platLab}
-                            </td>
-
-                            {/* Natural columns */}
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-[#DAD9D6]/80">
-                              {row.silNat}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-[#F1641E] font-bold">
-                              {row.g10kNat}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-emerald-300 font-bold">
-                              {row.g14kNat}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-green-400 font-bold">
-                              {row.g18kNat}
-                            </td>
-                            <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/30 text-amber-400 font-bold">
-                              {row.platNat}
-                            </td>
-
-                            <td className="py-2.5 px-2 text-center">
-                              <button
-                                onClick={() => confirmRemoveExcelRow(index)}
-                                className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </td>
+                  {excelRows.length === 0 ? (
+                    <div className="p-12 text-center text-xs text-[#DAD9D6]/60 border border-dashed border-[#6e716d] rounded-xl bg-[#363835]/40">
+                      No active entries saved in Excel. Setup your specs,
+                      specify categories, and click "Add to Excel" to append SKU
+                      details.
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto rounded-xl border border-[#6e716d] bg-[#363835] max-h-[550px]">
+                      <table
+                        className="w-full text-left text-md border-collapse"
+                        style={{ minWidth: "2000px" }}
+                      >
+                        <thead>
+                          {/* Top Row Category Grouping */}
+                          <tr className="bg-[#424441] border-b border-[#4d4f4c] text-md font-bold text-[#DAD9D6] uppercase tracking-wider text-center">
+                            <th
+                              colSpan={4}
+                              className="py-2 border-r border-[#4d4f4c]"
+                            >
+                              General Metadata
+                            </th>
+                            <th
+                              colSpan={1}
+                              className="py-2 border-r border-[#4d4f4c] bg-[#363835] text-indigo-400"
+                            >
+                              SIDE
+                            </th>
+                            <th
+                              colSpan={1}
+                              className="py-2 border-r border-[#4d4f4c]"
+                            >
+                              Size
+                            </th>
+                            <th
+                              colSpan={1}
+                              className="py-2 border-r border-[#4d4f4c] bg-[#363835] text-[#F1641E]"
+                            >
+                              MAIN
+                            </th>
+                            <th
+                              colSpan={5}
+                              className="py-2 border-r border-[#4d4f4c] bg-blue-900/20 text-blue-300"
+                            >
+                              Moissanite Columns (MOSO)
+                            </th>
+                            <th
+                              colSpan={5}
+                              className="py-2 border-r border-[#4d4f4c] bg-cyan-900/20 text-cyan-300"
+                            >
+                              Lab Grown Columns (LAB)
+                            </th>
+                            <th
+                              colSpan={5}
+                              className="py-2 bg-emerald-900/20 text-emerald-300"
+                            >
+                              Natural Diamond Columns (NAT)
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+
+                          {/* Main Row Header */}
+                          <tr className="bg-[#424441]/90 border-b border-[#4d4f4c] text-sm font-bold uppercase text-[#DAD9D6]">
+                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                              SR.NO
+                            </th>
+                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                              ITEM
+                            </th>
+                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                              SKU
+                            </th>
+                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                              SHAPE
+                            </th>
+                            <th className="py-3 px-3 border-r border-[#4d4f4c] bg-[#424441]/40">
+                              DIA WT.
+                            </th>
+                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                              SOL MM
+                            </th>
+                            <th className="py-3 px-3 border-r border-[#4d4f4c] bg-[#424441]/40">
+                              SOL WT.
+                            </th>
+
+                            {/* Moissanite Purities */}
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-blue-900/10">
+                              SIL MOSO
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-blue-400 bg-blue-900/10">
+                              10K MOSO
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-blue-300 bg-blue-900/10">
+                              14K MOSO
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-400 bg-blue-900/10">
+                              18K MOSO
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-blue-900/15">
+                              Plat Moso
+                            </th>
+
+                            {/* Lab Grown Purities */}
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-cyan-900/10">
+                              SIL LAB
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-cyan-400 bg-cyan-900/10">
+                              10K LAB
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-cyan-300 bg-cyan-900/10">
+                              14K LAB
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-400 bg-cyan-900/10">
+                              18K LAB
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-cyan-900/15">
+                              Plat Lab
+                            </th>
+
+                            {/* Natural Purities */}
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-emerald-900/10">
+                              SIL NAT
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-455 bg-emerald-900/10">
+                              10K NAT
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-300 bg-emerald-900/10">
+                              14K NAT
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-green-400 bg-emerald-900/10">
+                              18K NAT
+                            </th>
+                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-emerald-900/15">
+                              Plat Nat
+                            </th>
+
+                            <th className="py-3 px-2 text-center">Delete</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[#4d4f4c]">
+                          {excelRows.map((row, index) => (
+                            <tr
+                              key={index}
+                              className="hover:bg-[#424441]/30 text-sm transition-all"
+                            >
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]/70">
+                                {row.srNo}
+                              </td>
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] font-sans font-medium text-[#BCBCB4]">
+                                {row.item}
+                              </td>
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]/80">
+                                {row.sku}
+                              </td>
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]">
+                                {row.shape}
+                              </td>
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20">
+                                {row.sideDiaWt}
+                              </td>
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center">
+                                {row.solMm}
+                              </td>
+                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20">
+                                {row.solWt}
+                              </td>
+
+                              {/* Moissanite columns */}
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-[#DAD9D6]/80">
+                                {row.silMoso}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-blue-400 font-bold">
+                                {row.g10kMoso}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-blue-300 font-bold">
+                                {row.g14kMoso}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-emerald-400 font-bold">
+                                {row.g18kMoso}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/30 text-amber-400 font-bold">
+                                {row.platMoso}
+                              </td>
+
+                              {/* Lab Grown columns */}
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-[#DAD9D6]/80">
+                                {row.silLab}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-400 font-bold">
+                                {row.g10kLab}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-300 font-bold">
+                                {row.g14kLab}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-emerald-400 font-bold">
+                                {row.g18kLab}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/30 text-amber-400 font-bold">
+                                {row.platLab}
+                              </td>
+
+                              {/* Natural columns */}
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-[#DAD9D6]/80">
+                                {row.silNat}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-[#F1641E] font-bold">
+                                {row.g10kNat}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-emerald-300 font-bold">
+                                {row.g14kNat}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-green-400 font-bold">
+                                {row.g18kNat}
+                              </td>
+                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/30 text-amber-400 font-bold">
+                                {row.platNat}
+                              </td>
+
+                              <td className="py-2.5 px-2 text-center">
+                                <button
+                                  onClick={() => confirmRemoveExcelRow(index)}
+                                  className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (
@@ -2556,6 +2634,26 @@ function doPost(e) {
                     email: e.target.value,
                   })
                 }
+                className="w-full h-14 px-4 rounded-xl border border-[#5A5D59] outline-none text-[#1f1f1f]"
+              />
+            </div>
+
+            <div className="mb-5">
+              <label className="block text-[#5A5D59] text-md mb-2">
+                Mobile Number
+              </label>
+
+              <input
+                type="tel"
+                maxLength={10}
+                value={signupData.mobile}
+                onChange={(e) =>
+                  setSignupData({
+                    ...signupData,
+                    mobile: e.target.value.replace(/\D/g, ""),
+                  })
+                }
+                placeholder="Enter mobile number"
                 className="w-full h-14 px-4 rounded-xl border border-[#5A5D59] outline-none text-[#1f1f1f]"
               />
             </div>

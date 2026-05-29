@@ -768,3 +768,26 @@ export const updateBlog = async (id: string, formData: BlogFormData, token: stri
     return { success: false, message: "Failed to update blog" };
   }
 };
+
+export interface User {
+  _id: string;
+  name: string;
+  mobile: string;
+  email: string;
+  createdAt: string;
+}
+
+export const fetchUsersService = async (): Promise<User[]> => {
+  try {
+    const response = await apiClient.get<{
+      success: boolean;
+      totalUsers: number;
+      users: User[];
+    }>("/user/all-users");
+
+    return response.data.users;
+  } catch (err: unknown) {
+    console.error("fetchUsersService error:", err);
+    throw err;
+  }
+};

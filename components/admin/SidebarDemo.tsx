@@ -18,6 +18,7 @@ import Image from "next/image";
 import logoIcon from "../../public/images/1.png";
 import { IoHomeOutline } from "react-icons/io5";
 import { LuUserRoundPlus } from "react-icons/lu";
+import { LuCircleUser } from "react-icons/lu";
 
 export function SidebarDemo() {
   const links = [
@@ -67,6 +68,11 @@ export function SidebarDemo() {
       label: "Social Media Post",
       href: "/admin/social-media-post",
       icon: <GiFilmProjector size={22} className="text-[#babbb5]" />,
+    },
+    {
+      label: "Etsy Users",
+      href: "/admin/etsy-users",
+      icon: <LuCircleUser size={22} className="text-[#babbb5]" />,
     },
   ];
 
