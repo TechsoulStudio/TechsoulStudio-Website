@@ -131,6 +131,8 @@ export default function App() {
 
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
   // Multi-Select Stone Category State (Default has Moissanite selected)
   const [selectedCategories, setSelectedCategories] = useState(["Moissanite"]);
 
@@ -1438,7 +1440,7 @@ function doPost(e) {
           <div className="fixed top-4 right-10 z-50 flex items-center gap-3">
             {isLoggedIn ? (
               <button
-                onClick={handleLogout}
+                onClick={() => setShowLogoutModal(true)}
                 className="text-[#DAD9D6] cursor-pointer"
               >
                 <LogOut className="h-8 w-8 stroke-[2]" />
@@ -3050,6 +3052,42 @@ function doPost(e) {
                 Log In
               </span>
             </p>
+          </div>
+        </div>
+      )}
+
+      {showLogoutModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#424441] border border-[#6e716d] rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-[#F1641E]">
+              <LogOut className="h-6 w-6 stroke-[2]" />
+              <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+                Confirm Logout
+              </h3>
+            </div>
+
+            <p className="text-md text-[#DAD9D6]">
+              Are you sure you want to logout from your account?
+            </p>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 rounded-lg bg-[#363835] hover:bg-[#4d4f4c] text-[#BCBCB4] font-semibold text-sm transition-colors cursor-pointer"
+              >
+                No, Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setShowLogoutModal(false);
+                }}
+                className="px-4 py-2 rounded-lg bg-[#F1641E] hover:bg-[#d85312] text-[#DAD9D0] font-bold text-sm transition-colors cursor-pointer"
+              >
+                Yes, Logout
+              </button>
+            </div>
           </div>
         </div>
       )}
