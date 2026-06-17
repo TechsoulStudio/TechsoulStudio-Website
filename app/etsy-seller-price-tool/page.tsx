@@ -814,7 +814,7 @@ export default function App() {
     }
 
     // 1. Update local UI log
-    setExcelRows((prev) => [...prev, newRow]);
+    // setExcelRows((prev) => [...prev, newRow]);
 
     try {
       const token = localStorage.getItem("userToken");
@@ -837,73 +837,75 @@ export default function App() {
         toast.error(data.message || "Failed to save product");
         return;
       }
-
       toast.success("Product added successfully");
-      getMyProducts();
+
+      // UI update
+      setExcelRows((prev) => [...prev, newRow]);
+
+      await getMyProducts();
+
+      const flatRowArray = [
+        newRow.srNo,
+        newRow.item,
+        newRow.sku,
+        newRow.shape,
+        newRow.sideDiaWt,
+        newRow.solMm,
+        newRow.solWt,
+        newRow.silMoso,
+        newRow.g10kMoso,
+        newRow.g14kMoso,
+        newRow.g18kMoso,
+        newRow.platMoso,
+        newRow.silLab,
+        newRow.g10kLab,
+        newRow.g14kLab,
+        newRow.g18kLab,
+        newRow.platLab,
+        newRow.silNat,
+        newRow.g10kNat,
+        newRow.g14kNat,
+        newRow.g18kNat,
+        newRow.platNat,
+      ];
+
+      // 3. Securely stream directly to user's Google Sheet Web App if URL is provided
+      if (webAppUrl && webAppUrl.trim() !== "") {
+        setSuccessAlert(
+          `Calculations completed! Streaming SKU "${sku}" to your live Google Sheet...`,
+        );
+
+        fetch(webAppUrl.trim(), {
+          method: "POST",
+          mode: "no-cors", // Solves Google's redirect CORS limitation flawlessly
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ rowData: flatRowArray }),
+        })
+          .then(() => {
+            const successMessage = `SKU "${sku}" Successfully Saved in Live Excel Log Sheet!`;
+
+            setSuccessAlert(successMessage);
+            toast.success(successMessage);
+            setTimeout(() => setSuccessAlert(""), 6000);
+          })
+          .catch((err) => {
+            console.error("Sheets stream error: ", err);
+            setSuccessAlert(
+              `Error: Could not sync to Google Sheet. Data saved inside the browser excel log.`,
+            );
+            setTimeout(() => setSuccessAlert(""), 6000);
+          });
+      } else {
+        setSuccessAlert(
+          `Added locally! (Configure your Google Web App URL on the left to sync directly to Google Sheets).`,
+        );
+        setTimeout(() => setSuccessAlert(""), 5000);
+      }
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong");
-    }
-
-    // 2. Compile flat row data array matching Excel column structures
-    const flatRowArray = [
-      newRow.srNo,
-      newRow.item,
-      newRow.sku,
-      newRow.shape,
-      newRow.sideDiaWt,
-      newRow.solMm,
-      newRow.solWt,
-      newRow.silMoso,
-      newRow.g10kMoso,
-      newRow.g14kMoso,
-      newRow.g18kMoso,
-      newRow.platMoso,
-      newRow.silLab,
-      newRow.g10kLab,
-      newRow.g14kLab,
-      newRow.g18kLab,
-      newRow.platLab,
-      newRow.silNat,
-      newRow.g10kNat,
-      newRow.g14kNat,
-      newRow.g18kNat,
-      newRow.platNat,
-    ];
-
-    // 3. Securely stream directly to user's Google Sheet Web App if URL is provided
-    if (webAppUrl && webAppUrl.trim() !== "") {
-      setSuccessAlert(
-        `Calculations completed! Streaming SKU "${sku}" to your live Google Sheet...`,
-      );
-
-      fetch(webAppUrl.trim(), {
-        method: "POST",
-        mode: "no-cors", // Solves Google's redirect CORS limitation flawlessly
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ rowData: flatRowArray }),
-      })
-        .then(() => {
-          const successMessage = `SKU "${sku}" Successfully Saved in Live Excel Log Sheet!`;
-
-          setSuccessAlert(successMessage);
-          toast.success(successMessage);
-          setTimeout(() => setSuccessAlert(""), 6000);
-        })
-        .catch((err) => {
-          console.error("Sheets stream error: ", err);
-          setSuccessAlert(
-            `Error: Could not sync to Google Sheet. Data saved inside the browser excel log.`,
-          );
-          setTimeout(() => setSuccessAlert(""), 6000);
-        });
-    } else {
-      setSuccessAlert(
-        `Added locally! (Configure your Google Web App URL on the left to sync directly to Google Sheets).`,
-      );
-      setTimeout(() => setSuccessAlert(""), 5000);
     }
   };
 
@@ -2677,7 +2679,7 @@ function doPost(e) {
               </div>
             </div>
 
-            <button
+            {/* <button
               onClick={() => {
                 setOpenLoginModal(false);
                 setOpenForgotModal(true);
@@ -2685,7 +2687,7 @@ function doPost(e) {
               className="text-[#1f1f1f] text-sm hover:underline"
             >
               Forgot password?
-            </button>
+            </button> */}
 
             {/* Login Button */}
             <button
