@@ -157,6 +157,7 @@ export default function App() {
   // Form State - Gold & Silver Master Rates
   const [gold24k10g, setGold24k10g] = useState(72000); // 10g of 24k Gold
   const [silver10g, setSilver10g] = useState(850); // 10g of Silver
+  const [platinum10g, setPlatinum10g] = useState(35000); // 10g of Platinum
 
   // Custom multipliers/ratios relative to 24K Gold
   const gold18kRatio = 18 / 24; // 0.75
@@ -235,11 +236,11 @@ export default function App() {
   const gold24kPerGram = gold24k10g / 10;
   const silverPerGram = silver10g / 10;
 
-  // Deriving rates for other purities based on gold 24k per gram
   const gold18kPerGram = gold24kPerGram * gold18kRatio;
   const gold14kPerGram = gold24kPerGram * gold14kRatio;
   const gold10kPerGram = gold24kPerGram * gold10kRatio;
-  const platinumPerGram = gold24kPerGram * platinumRatio;
+  // const platinumPerGram = gold24kPerGram * platinumRatio;
+  const platinumPerGram = platinum10g / 10;
 
   // Authentication & Settings Data Stream listener
   // useEffect(() => {
@@ -1776,7 +1777,7 @@ function doPost(e) {
 
                 <div className="space-y-4">
                   {/* Metal master fields */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-3 gap-4">
                     <div className="space-y-1">
                       <label className="block text-md text-[#DAD9D6] uppercase font-bold">
                         24K Gold (10g)
@@ -1799,6 +1800,20 @@ function doPost(e) {
                         value={silver10g}
                         onChange={(e) =>
                           setSilver10g(Math.max(0, Number(e.target.value)))
+                        }
+                        className="w-full bg-[#363835] border border-[#4d4f4c] rounded-lg py-1.5 px-3 text-xs font-mono text-[#BCBCB4]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-md text-[#DAD9D6] uppercase font-bold">
+                        Platinum (10g)
+                      </label>
+
+                      <input
+                        type="number"
+                        value={platinum10g}
+                        onChange={(e) =>
+                          setPlatinum10g(Math.max(0, Number(e.target.value)))
                         }
                         className="w-full bg-[#363835] border border-[#4d4f4c] rounded-lg py-1.5 px-3 text-xs font-mono text-[#BCBCB4]"
                       />
