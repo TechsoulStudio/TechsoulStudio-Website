@@ -121,7 +121,7 @@ export default function Footer() {
           <div>
             <h3 className="pb-3 font-bold">Address</h3>
             <a
-              href="https://www.google.com/maps/embed?pb=!1m23!1m12!1m3!1d235032.5397697809!2d72.50903039999999!3d23.009689599999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!4m8!3e6!4m0!4m5!1s0x3be04fd05e304c2b%3A0x4cbce530a551fbd1!2sTechsoulStudio%2C%20603%2C%20Rio%20Business%20Hub%2C%20Near%20Yamuna%20Chowk%2C%20Krishna%20Avenue%2C%20Society%2C%20Mota%20Varachha%2C%20Surat%2C%20Gujarat%20394101!3m2!1d21.231459899999997!2d72.8761577!5e0!3m2!1sen!2sin!4v1785926071265!5m2!1sen!2sin"
+              href="https://maps.app.goo.gl/Ro2Q4H3VEXeY9X5m8"
               target="_blank"
               rel="noopener noreferrer"
               className="cursor-pointer"
