@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Percent,
   Sparkles,
@@ -22,6 +22,7 @@ import {
   Gem,
   CircleUser,
   LogOut,
+  Pencil,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import { Eye, EyeOff, X } from "lucide-react";
@@ -61,8 +62,7 @@ import Link from "next/link";
 
 // Inline SVG components to replace external react-icons
 const RiMenu3FillSvg = () => (
-  <svg
-    className="text-[#dad9d6]"
+  <svg className="text-[#dad9d6]"
     width="36"
     height="36"
     viewBox="0 0 24 24"
@@ -73,8 +73,7 @@ const RiMenu3FillSvg = () => (
 );
 
 const GoLinkSvg = () => (
-  <svg
-    className="h-5 w-5 text-[#F1641E]"
+  <svg className="h-5 w-5 text-[#F1641E]"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
@@ -194,17 +193,190 @@ export default function App() {
   // Choice of Export Price is hardcoded to 'listing' to prevent any loss of margin
   const exportPriceType = "listing";
 
-  // Live Simulated "Existing Excel Sheet" State matching your column structure
-  // const [excelRows, setExcelRows] = useState([]);
-  // const [excelRows, setExcelRows] = useState(() => {
-  //   if (typeof window !== "undefined") {
-  //     const savedRows = localStorage.getItem("etsyExcelRows");
-  //     return savedRows ? JSON.parse(savedRows) : [];
-  //   }
-  //   return [];
-  // });
-  // const [excelRows, setExcelRows] = useState([]);
-  const [excelRows, setExcelRows] = useState<any[]>([]);
+  const [excelRows, setExcelRows] = useState<any[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedRows = localStorage.getItem("etsyExcelRows");
+        return savedRows ? JSON.parse(savedRows) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
+  // Calculate column totals for Live Sheet and Excel Export
+  const totals = useMemo(() => {
+    const sumField = (key: string) => {
+      let total = 0;
+      let hasAny = false;
+      excelRows.forEach((r) => {
+        const val = r[key];
+        if (val !== undefined && val !== null && val !== "" && val !== "N/A" && !isNaN(Number(val))) {
+          total += Number(val);
+          hasAny = true;
+        }
+      });
+      return hasAny ? total.toFixed(2) : "-";
+    };
+
+    const sumWeight = (r: any) => {
+      const val =
+        r.metalWeight !== undefined && r.metalWeight !== null && r.metalWeight !== "" && r.metalWeight !== "N/A"
+          ? r.metalWeight
+          : (r.metalWt ?? r.metal_weight ?? r.goldWeight ?? r.weight);
+      return val !== undefined && val !== null && val !== "" && val !== "N/A" && !isNaN(Number(val))
+        ? Number(val)
+        : 0;
+    };
+
+    let totalMetalWt = 0;
+    let hasMetalWt = false;
+    excelRows.forEach((r) => {
+      const w = sumWeight(r);
+      if (w > 0) {
+        totalMetalWt += w;
+        hasMetalWt = true;
+      }
+    });
+
+    return {
+      solWt: sumField("solWt"),
+      sideDiaWt: sumField("sideDiaWt"),
+      metalWeight: hasMetalWt ? totalMetalWt.toFixed(2) : "-",
+      silMoso: sumField("silMoso"),
+      g10kMoso: sumField("g10kMoso"),
+      g14kMoso: sumField("g14kMoso"),
+      g18kMoso: sumField("g18kMoso"),
+      platMoso: sumField("platMoso"),
+      silLab: sumField("silLab"),
+      g10kLab: sumField("g10kLab"),
+      g14kLab: sumField("g14kLab"),
+      g18kLab: sumField("g18kLab"),
+      platLab: sumField("platLab"),
+      silNat: sumField("silNat"),
+      g10kNat: sumField("g10kNat"),
+      g14kNat: sumField("g14kNat"),
+      g18kNat: sumField("g18kNat"),
+      platNat: sumField("platNat"),
+    };
+  }, [excelRows]);
+
+  // Live Sheet Drag & Fast Wheel Scroll Controls
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const wheelCleanupRef = useRef<(() => void) | null>(null);
+  const [isTableDragging, setIsTableDragging] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+  const dragAxisRef = useRef<"x" | "y" | null>(null);
+
+  // Reliable callback ref: attaches wheel listener immediately when container mounts
+  const setTableRef = useCallback((node: HTMLDivElement | null) => {
+    if (wheelCleanupRef.current) {
+      wheelCleanupRef.current();
+      wheelCleanupRef.current = null;
+    }
+    tableScrollRef.current = node;
+    if (!node) return;
+
+    const onWheel = (e: WheelEvent) => {
+      let dx = e.deltaX;
+      let dy = e.deltaY;
+
+      // Normalize Windows mouse wheel line mode
+      if (e.deltaMode === 1) {
+        dx *= 30;
+        dy *= 30;
+      } else if (e.deltaMode === 2) {
+        dx *= 300;
+        dy *= 300;
+      }
+
+      // Map Shift + Wheel to horizontal scroll for standard mice
+      if (e.shiftKey && !dx && dy) {
+        dx = dy;
+        dy = 0;
+      }
+
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      // Strict Axis Locking & Smooth Inner Scrolling
+      if (absX > absY) {
+        // Horizontal scroll intent
+        node.scrollLeft += dx;
+      } else {
+        // Vertical scroll intent: scroll inner product rows
+        node.scrollTop += dy;
+      }
+
+      // Prevent full page from scrolling while cursor is inside product table
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    node.addEventListener("wheel", onWheel, { passive: false });
+    wheelCleanupRef.current = () => {
+      node.removeEventListener("wheel", onWheel);
+    };
+  }, []);
+
+  const handleTableMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest("button, input, select, a")) return;
+    if (!tableScrollRef.current) return;
+    setIsTableDragging(true);
+    dragAxisRef.current = null;
+    setDragStartPos({
+      x: e.pageX,
+      y: e.pageY,
+      scrollLeft: tableScrollRef.current.scrollLeft,
+      scrollTop: tableScrollRef.current.scrollTop,
+    });
+  };
+
+  useEffect(() => {
+    if (!isTableDragging) return;
+    const onMouseMove = (e: MouseEvent) => {
+      if (!tableScrollRef.current) return;
+      e.preventDefault();
+      const dx = e.pageX - dragStartPos.x;
+      const dy = e.pageY - dragStartPos.y;
+
+      // Lock to dominant axis once movement passes 3px threshold to eliminate accidental diagonal drift
+      if (!dragAxisRef.current) {
+        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) >= 3) {
+          dragAxisRef.current = "x";
+        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) >= 3) {
+          dragAxisRef.current = "y";
+        }
+      }
+
+      if (dragAxisRef.current === "x") {
+        // Strictly horizontal drag - keep vertical scroll locked
+        tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft - dx;
+        tableScrollRef.current.scrollTop = dragStartPos.scrollTop;
+      } else if (dragAxisRef.current === "y") {
+        // Strictly vertical drag - keep horizontal scroll locked
+        tableScrollRef.current.scrollTop = dragStartPos.scrollTop - dy;
+        tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft;
+      } else {
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft - dx;
+        } else {
+          tableScrollRef.current.scrollTop = dragStartPos.scrollTop - dy;
+        }
+      }
+    };
+    const onMouseUp = () => {
+      setIsTableDragging(false);
+      dragAxisRef.current = null;
+    };
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [isTableDragging, dragStartPos]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showLoginRequiredModal, setShowLoginRequiredModal] = useState(false);
 
@@ -220,6 +392,11 @@ export default function App() {
     sku: "",
     srNo: null,
   });
+
+  // Edit Product Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [editLoading, setEditLoading] = useState(false);
 
   // UI feedback states
   const [copiedText, setCopiedText] = useState("");
@@ -350,6 +527,7 @@ export default function App() {
 
       const response = await fetch(
         "https://techsoulstudio-back.onrender.com/api/user/login",
+        // "http://localhost:5000/api/user/login",
         {
           method: "POST",
           headers: {
@@ -436,6 +614,7 @@ export default function App() {
 
       const response = await fetch(
         "https://techsoulstudio-back.onrender.com/api/user/signup",
+        // "http://localhost:5000/api/user/signup",
         {
           method: "POST",
           headers: {
@@ -483,6 +662,7 @@ export default function App() {
 
       const response = await fetch(
         "https://techsoulstudio-back.onrender.com/api/user/send-forgot-otp",
+        // "http://localhost:5000/api/user/send-forgot-otp",
         {
           method: "POST",
           headers: {
@@ -528,6 +708,7 @@ export default function App() {
 
       const response = await fetch(
         "https://techsoulstudio-back.onrender.com/api/user/verify-forgot-otp",
+        // "http://localhost:5000/api/user/verify-forgot-otp",
         {
           method: "POST",
           headers: {
@@ -631,8 +812,17 @@ export default function App() {
   //   });
   // };
 
-  const calculateCategoryPrices = (mainRate: number, sideRate: number) => {
-    // 18K Gold density baseline weight conversion multipliers
+  // Reusable core pricing calculator supporting custom weights and margins
+  const computePurityPrices = (
+    mainRate: number,
+    sideRate: number,
+    itemMetalWeight: number,
+    itemMainStoneWeight: number,
+    itemSideStoneWeight: number,
+    itemEtsyFeePercent: number,
+    itemProfitPercent: number,
+    itemSalePercent: number
+  ) => {
     const metals = [
       {
         name: "Silver",
@@ -667,18 +857,23 @@ export default function App() {
     ];
 
     const flatOtherCharges = Number(otherCharges) || 0;
+    const safeMetalWeight = Math.max(0, Number(itemMetalWeight) || 0);
+    const safeMainWeight = Math.max(0, Number(itemMainStoneWeight) || 0);
+    const safeSideWeight = Math.max(0, Number(itemSideStoneWeight) || 0);
+    const safeEtsyFee = Number(itemEtsyFeePercent) || 0;
+    const safeProfit = Number(itemProfitPercent) || 0;
+    const safeSale = Number(itemSalePercent) || 0;
 
     return metals.map((metal) => {
-      // 1. Automatically calculate the physical weight based on the baseline 18K gold specific gravity
-      const effectiveWeight = metalWeight * metal.weightMultiplier;
+      // 1. Calculate physical weight based on 18K gold specific gravity
+      const effectiveWeight = safeMetalWeight * metal.weightMultiplier;
 
-      // 2. Use this corrected "effectiveWeight" for metal & labor pricing
+      // 2. Compute metal, labor, and stone costs
       const metalCost = effectiveWeight * metal.ratePerGram;
       const laborCost = effectiveWeight * laborPerGram;
-      const mainStoneCost = mainStoneWeight * mainRate;
-      const sideStoneCost = sideStoneWeight * sideRate;
+      const mainStoneCost = safeMainWeight * mainRate;
+      const sideStoneCost = safeSideWeight * sideRate;
 
-      // Raw cost adds metal + labor + main + side + other charges
       const totalBaseCost =
         metalCost +
         laborCost +
@@ -686,19 +881,18 @@ export default function App() {
         sideStoneCost +
         flatOtherCharges;
 
-      // Step A: Base making price + Etsy fee %
-      const costWithEtsyFee = totalBaseCost * (1 + etsyFeePercent / 100);
+      // Step A: Base price + Etsy fee %
+      const costWithEtsyFee = totalBaseCost * (1 + safeEtsyFee / 100);
 
-      // Step B: Add Profit Margin % (This establishes the Sale Price)
-      const salePrice = costWithEtsyFee * (1 + profitPercent / 100);
+      // Step B: Profit Margin % establishes Sale Price
+      const salePrice = costWithEtsyFee * (1 + safeProfit / 100);
 
-      // Step C: REVERSED DISCOUNT FORMULA
-      const divisorSale = 1 - salePercent / 100;
+      // Step C: REVERSED DISCOUNT FORMULA for Listing Price
+      const divisorSale = 1 - safeSale / 100;
       const listingPrice =
         divisorSale > 0 ? salePrice / divisorSale : salePrice;
 
-      // Calculated Net profits & Fee Breakdown
-      const actualEtsyFeeAmount = salePrice * (etsyFeePercent / 100);
+      const actualEtsyFeeAmount = salePrice * (safeEtsyFee / 100);
       const actualNetProfit = salePrice - actualEtsyFeeAmount - totalBaseCost;
 
       return {
@@ -708,9 +902,22 @@ export default function App() {
         listingPrice: listingPrice.toFixed(2),
         salePrice: salePrice.toFixed(2),
         actualNetProfit: actualNetProfit.toFixed(2),
-        effectiveWeight: effectiveWeight.toFixed(2), // Added so it can be rendered on the screen
+        effectiveWeight: effectiveWeight.toFixed(2),
       };
     });
+  };
+
+  const calculateCategoryPrices = (mainRate: number, sideRate: number) => {
+    return computePurityPrices(
+      mainRate,
+      sideRate,
+      metalWeight,
+      mainStoneWeight,
+      sideStoneWeight,
+      etsyFeePercent,
+      profitPercent,
+      salePercent
+    );
   };
 
   // Get pricing dynamically for the currently active tab preview
@@ -770,6 +977,7 @@ export default function App() {
       sku: sku || "N/A",
       shape: shape || "Round",
       sideDiaWt: sideStoneWeight.toFixed(2),
+      metalWeight: metalWeight !== undefined && metalWeight !== null ? metalWeight : "N/A",
       solMm: solMm || "N/A",
       solWt: mainStoneWeight.toFixed(2),
 
@@ -789,6 +997,23 @@ export default function App() {
       g14kNat: "",
       g18kNat: "",
       platNat: "",
+
+      etsyFeePercent: etsyFeePercent !== undefined && etsyFeePercent !== null ? etsyFeePercent : "N/A",
+      profitPercent: profitPercent !== undefined && profitPercent !== null ? profitPercent : "N/A",
+      salePercent: salePercent !== undefined && salePercent !== null ? salePercent : "N/A",
+
+      // Market Valuation Rates snapshot
+      gold24k10g: gold24k10g,
+      silver10g: silver10g,
+      platinum10g: platinum10g,
+      laborPerGram: laborPerGram,
+      otherCharges: otherCharges,
+      mosoMainRate: mosoMainRate,
+      mosoSideRate: mosoSideRate,
+      labMainRate: labMainRate,
+      labSideRate: labSideRate,
+      natMainRate: natMainRate,
+      natSideRate: natSideRate,
     };
 
     // Fill categories that are selected
@@ -824,6 +1049,7 @@ export default function App() {
 
       const response = await fetch(
         "https://techsoulstudio-back.onrender.com/api/product/add-product",
+        // "http://localhost:5000/api/product/add-product",
         {
           method: "POST",
           headers: {
@@ -853,6 +1079,7 @@ export default function App() {
         newRow.sku,
         newRow.shape,
         newRow.sideDiaWt,
+        newRow.metalWeight,
         newRow.solMm,
         newRow.solWt,
         newRow.silMoso,
@@ -870,6 +1097,9 @@ export default function App() {
         newRow.g14kNat,
         newRow.g18kNat,
         newRow.platNat,
+        newRow.etsyFeePercent,
+        newRow.profitPercent,
+        newRow.salePercent,
       ];
 
       // 3. Securely stream directly to user's Google Sheet Web App if URL is provided
@@ -920,6 +1150,7 @@ export default function App() {
 
       const response = await fetch(
         "https://techsoulstudio-back.onrender.com/api/product/my-products",
+        // "http://localhost:5000/api/product/my-products",
         {
           method: "GET",
           headers: {
@@ -939,6 +1170,238 @@ export default function App() {
     } catch (error) {
       console.log(error);
       toast.error("Something went wrong");
+    }
+  };
+
+  // Open edit modal with pre-filled row data
+  const handleOpenEditModal = (row: any) => {
+    setEditingProduct({
+      _id: row._id,
+      item: row.item || "",
+      sku: row.sku || "",
+      shape: row.shape || "Round",
+      solMm: row.solMm && row.solMm !== "N/A" ? row.solMm : "",
+      solWt: row.solWt !== undefined && row.solWt !== null && row.solWt !== "N/A" ? row.solWt : "",
+      sideDiaWt: row.sideDiaWt !== undefined && row.sideDiaWt !== null && row.sideDiaWt !== "N/A" ? row.sideDiaWt : "",
+      metalWeight: row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "N/A" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? ""),
+      // Existing price fields to detect active categories
+      silMoso: row.silMoso ?? "",
+      g10kMoso: row.g10kMoso ?? "",
+      g14kMoso: row.g14kMoso ?? "",
+      g18kMoso: row.g18kMoso ?? "",
+      platMoso: row.platMoso ?? "",
+      silLab: row.silLab ?? "",
+      g10kLab: row.g10kLab ?? "",
+      g14kLab: row.g14kLab ?? "",
+      g18kLab: row.g18kLab ?? "",
+      platLab: row.platLab ?? "",
+      silNat: row.silNat ?? "",
+      g10kNat: row.g10kNat ?? "",
+      g14kNat: row.g14kNat ?? "",
+      g18kNat: row.g18kNat ?? "",
+      platNat: row.platNat ?? "",
+      etsyFeePercent: row.etsyFeePercent ?? row.etsyFeeMargin ?? "",
+      profitPercent: row.profitPercent ?? row.profitMarkup ?? "",
+      salePercent: row.salePercent ?? row.salePromotion ?? "",
+      gold24k10g: row.gold24k10g ?? gold24k10g,
+      silver10g: row.silver10g ?? silver10g,
+      platinum10g: row.platinum10g ?? platinum10g,
+      laborPerGram: row.laborPerGram ?? laborPerGram,
+      otherCharges: row.otherCharges ?? otherCharges,
+      mosoMainRate: row.mosoMainRate ?? mosoMainRate,
+      mosoSideRate: row.mosoSideRate ?? mosoSideRate,
+      labMainRate: row.labMainRate ?? labMainRate,
+      labSideRate: row.labSideRate ?? labSideRate,
+      natMainRate: row.natMainRate ?? natMainRate,
+      natSideRate: row.natSideRate ?? natSideRate,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleSaveEditProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingProduct || !editingProduct._id) return;
+
+    try {
+      setEditLoading(true);
+      const token = localStorage.getItem("userToken");
+
+      const parseNum = (val: any) => {
+        if (val === "" || val === null || val === undefined || isNaN(Number(val))) return undefined;
+        return Number(val);
+      };
+
+      const newMetalWeight = parseNum(editingProduct.metalWeight) ?? 0;
+      const newSolWt = parseNum(editingProduct.solWt) ?? 0;
+      const newSideDiaWt = parseNum(editingProduct.sideDiaWt) ?? 0;
+
+      // Retain product margins or fallback to page default config
+      const itemEtsyFee =
+        editingProduct.etsyFeePercent !== undefined &&
+          editingProduct.etsyFeePercent !== "" &&
+          !isNaN(Number(editingProduct.etsyFeePercent))
+          ? Number(editingProduct.etsyFeePercent)
+          : etsyFeePercent;
+      const itemProfit =
+        editingProduct.profitPercent !== undefined &&
+          editingProduct.profitPercent !== "" &&
+          !isNaN(Number(editingProduct.profitPercent))
+          ? Number(editingProduct.profitPercent)
+          : profitPercent;
+      const itemSale =
+        editingProduct.salePercent !== undefined &&
+          editingProduct.salePercent !== "" &&
+          !isNaN(Number(editingProduct.salePercent))
+          ? Number(editingProduct.salePercent)
+          : salePercent;
+
+      const getVal = (dataset: any[], key: string) => {
+        const found = dataset.find((item) => item.metalKey === key);
+        if (!found) return "";
+        return exportPriceType === "listing" ? found.listingPrice : found.salePrice;
+      };
+
+      // Detect which categories were active for this product
+      const hasMoso = Boolean(
+        editingProduct.silMoso ||
+        editingProduct.g10kMoso ||
+        editingProduct.g14kMoso ||
+        editingProduct.g18kMoso ||
+        editingProduct.platMoso
+      );
+      const hasLab = Boolean(
+        editingProduct.silLab ||
+        editingProduct.g10kLab ||
+        editingProduct.g14kLab ||
+        editingProduct.g18kLab ||
+        editingProduct.platLab
+      );
+      const hasNat = Boolean(
+        editingProduct.silNat ||
+        editingProduct.g10kNat ||
+        editingProduct.g14kNat ||
+        editingProduct.g18kNat ||
+        editingProduct.platNat
+      );
+
+      const payload: any = {
+        item: editingProduct.item,
+        sku: editingProduct.sku,
+        shape: editingProduct.shape,
+        solMm: editingProduct.solMm || "N/A",
+        solWt: parseNum(editingProduct.solWt),
+        sideDiaWt: parseNum(editingProduct.sideDiaWt),
+        metalWeight: parseNum(editingProduct.metalWeight),
+        etsyFeePercent: itemEtsyFee,
+        profitPercent: itemProfit,
+        salePercent: itemSale,
+        gold24k10g: editingProduct.gold24k10g ?? gold24k10g,
+        silver10g: editingProduct.silver10g ?? silver10g,
+        platinum10g: editingProduct.platinum10g ?? platinum10g,
+        laborPerGram: editingProduct.laborPerGram ?? laborPerGram,
+        otherCharges: editingProduct.otherCharges ?? otherCharges,
+        mosoMainRate: editingProduct.mosoMainRate ?? mosoMainRate,
+        mosoSideRate: editingProduct.mosoSideRate ?? mosoSideRate,
+        labMainRate: editingProduct.labMainRate ?? labMainRate,
+        labSideRate: editingProduct.labSideRate ?? labSideRate,
+        natMainRate: editingProduct.natMainRate ?? natMainRate,
+        natSideRate: editingProduct.natSideRate ?? natSideRate,
+      };
+
+      // Recalculate and update only active categories
+      if (hasMoso) {
+        const mosoCalcs = computePurityPrices(
+          mosoMainRate,
+          mosoSideRate,
+          newMetalWeight,
+          newSolWt,
+          newSideDiaWt,
+          itemEtsyFee,
+          itemProfit,
+          itemSale
+        );
+        payload.silMoso = getVal(mosoCalcs, "silver");
+        payload.g10kMoso = getVal(mosoCalcs, "g10k");
+        payload.g14kMoso = getVal(mosoCalcs, "g14k");
+        payload.g18kMoso = getVal(mosoCalcs, "g18k");
+        payload.platMoso = getVal(mosoCalcs, "platinum");
+      }
+
+      if (hasLab) {
+        const labCalcs = computePurityPrices(
+          labMainRate,
+          labSideRate,
+          newMetalWeight,
+          newSolWt,
+          newSideDiaWt,
+          itemEtsyFee,
+          itemProfit,
+          itemSale
+        );
+        payload.silLab = getVal(labCalcs, "silver");
+        payload.g10kLab = getVal(labCalcs, "g10k");
+        payload.g14kLab = getVal(labCalcs, "g14k");
+        payload.g18kLab = getVal(labCalcs, "g18k");
+        payload.platLab = getVal(labCalcs, "platinum");
+      }
+
+      if (hasNat) {
+        const natCalcs = computePurityPrices(
+          natMainRate,
+          natSideRate,
+          newMetalWeight,
+          newSolWt,
+          newSideDiaWt,
+          itemEtsyFee,
+          itemProfit,
+          itemSale
+        );
+        payload.silNat = getVal(natCalcs, "silver");
+        payload.g10kNat = getVal(natCalcs, "g10k");
+        payload.g14kNat = getVal(natCalcs, "g14k");
+        payload.g18kNat = getVal(natCalcs, "g18k");
+        payload.platNat = getVal(natCalcs, "platinum");
+      }
+
+      const response = await fetch(
+        `https://techsoulstudio-back.onrender.com/api/product/update-product/${editingProduct._id}`,
+        // `http://localhost:5000/api/product/update-product/${editingProduct._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: token || "",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      let data: any = {};
+      try {
+        data = await response.json();
+      } catch {
+        // non-JSON response from server
+      }
+
+      if (!response.ok) {
+        toast.error(
+          data?.message ||
+          (response.status === 404
+            ? "Backend API route not found (404). Please deploy the latest backend code to Render."
+            : "Failed to update product")
+        );
+        return;
+      }
+
+      toast.success("Product updated successfully!");
+      setShowEditModal(false);
+      setEditingProduct(null);
+      await getMyProducts();
+    } catch (error) {
+      console.error(error);
+      toast.error("Something went wrong while updating product");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -979,6 +1442,7 @@ export default function App() {
 
           const response = await fetch(
             `https://techsoulstudio-back.onrender.com/api/product/delete-product/${rowToDelete._id}`,
+            // `http://localhost:5000/api/product/delete-product/${rowToDelete._id}`,
             {
               method: "DELETE",
               headers: {
@@ -1048,6 +1512,7 @@ export default function App() {
 
           const response = await fetch(
             "https://techsoulstudio-back.onrender.com/api/product/delete-all-products",
+            // "http://localhost:5000/api/product/delete-all-products",
             {
               method: "DELETE",
               headers: {
@@ -1094,9 +1559,13 @@ export default function App() {
           "",
           "",
           "",
-          "SIDE",
-          "Size",
           "MAIN",
+          "SIDE",
+          "18K",
+          "Size",
+          "Etsy Margins & Promotions",
+          "",
+          "",
           "Moissanite Columns (MOSO)",
           "",
           "",
@@ -1112,15 +1581,30 @@ export default function App() {
           "",
           "",
           "",
+          "Market Valuation Rates",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
         ],
         [
           "SR.NO",
           "ITEM",
           "SKU",
           "SHAPE",
-          "DIA WT.",
-          "SOL MM",
           "SOL WT.",
+          "DIA WT.",
+          "18K MW (G)",
+          "SOL MM",
+          "EFM (%)",
+          "DPM (%)",
+          "ASP (%)",
           "SIL MOSO",
           "10K MOSO",
           "14K MOSO",
@@ -1136,6 +1620,17 @@ export default function App() {
           "14K NAT",
           "18K NAT",
           "Plat Nat",
+          "24K GOLD (10G)",
+          "SILVER (10G)",
+          "PLATINUM (10G)",
+          "LABOR / G",
+          "OTHER CHG (₹)",
+          "MOSO MAIN / CT",
+          "MOSO SIDE / CT",
+          "LAB MAIN / CT",
+          "LAB SIDE / CT",
+          "NAT MAIN / CT",
+          "NAT SIDE / CT",
         ],
       ];
 
@@ -1145,34 +1640,152 @@ export default function App() {
           row.item,
           row.sku,
           row.shape,
-          row.sideDiaWt,
-          row.solMm,
           row.solWt,
+          row.sideDiaWt,
+          row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? row.goldWeight ?? row.weight ?? "N/A"),
+          row.solMm,
+          row.etsyFeePercent !== undefined && row.etsyFeePercent !== null && row.etsyFeePercent !== "" ? row.etsyFeePercent : (row.etsyFeeMargin ?? row.etsyFee ?? "N/A"),
+          row.profitPercent !== undefined && row.profitPercent !== null && row.profitPercent !== "" ? row.profitPercent : (row.profitMarkup ?? row.profit ?? "N/A"),
+          row.salePercent !== undefined && row.salePercent !== null && row.salePercent !== "" ? row.salePercent : (row.salePromotion ?? row.salePromo ?? row.promotion ?? "N/A"),
+          // Prices: Moissanite
           row.silMoso,
           row.g10kMoso,
           row.g14kMoso,
           row.g18kMoso,
           row.platMoso,
+          // Prices: Lab Grown
           row.silLab,
           row.g10kLab,
           row.g14kLab,
           row.g18kLab,
           row.platLab,
+          // Prices: Natural Diamond
           row.silNat,
           row.g10kNat,
           row.g14kNat,
           row.g18kNat,
           row.platNat,
+          // Market Valuation Rates (placed at the end)
+          row.gold24k10g ?? gold24k10g,
+          row.silver10g ?? silver10g,
+          row.platinum10g ?? platinum10g,
+          row.laborPerGram ?? laborPerGram,
+          row.otherCharges ?? otherCharges,
+          row.mosoMainRate ?? mosoMainRate,
+          row.mosoSideRate ?? mosoSideRate,
+          row.labMainRate ?? labMainRate,
+          row.labSideRate ?? labSideRate,
+          row.natMainRate ?? natMainRate,
+          row.natSideRate ?? natSideRate,
         ]);
       });
 
+      // 1-2 blank rows to cleanly separate products from the total row
+      aoaData.push(new Array(37).fill(""));
+      aoaData.push(new Array(37).fill(""));
+
+      // Total summary row at the bottom of the exported sheet (Price columns only)
+      aoaData.push([
+        "TOTAL",
+        "",
+        "",
+        "",
+        "", // SOL WT (omitted)
+        "", // DIA WT (omitted)
+        "", // 18K MW (G) (omitted)
+        "", // SOL MM (omitted)
+        "", // EFM (%) (omitted)
+        "", // DPM (%) (omitted)
+        "", // ASP (%) (omitted)
+        // 15 price totals:
+        totals.silMoso,
+        totals.g10kMoso,
+        totals.g14kMoso,
+        totals.g18kMoso,
+        totals.platMoso,
+        totals.silLab,
+        totals.g10kLab,
+        totals.g14kLab,
+        totals.g18kLab,
+        totals.platLab,
+        totals.silNat,
+        totals.g10kNat,
+        totals.g14kNat,
+        totals.g18kNat,
+        totals.platNat,
+        // 11 blanks for Market Valuation Rates at the end:
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ]);
+
       const worksheet = XLSX.utils.aoa_to_sheet(aoaData);
 
+      const totalRowIndex = aoaData.length - 1;
+
       worksheet["!merges"] = [
-        { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
-        { s: { r: 0, c: 7 }, e: { r: 0, c: 11 } },
-        { s: { r: 0, c: 12 }, e: { r: 0, c: 16 } },
-        { s: { r: 0, c: 17 }, e: { r: 0, c: 21 } },
+        // Row 1 Category Merges (37 columns: 0 to 36)
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } }, // General Metadata (Cols 0-3: A to D)
+        { s: { r: 0, c: 8 }, e: { r: 0, c: 10 } }, // Etsy Margins (Cols 8-10: I to K)
+        { s: { r: 0, c: 11 }, e: { r: 0, c: 15 } }, // Moissanite Columns (MOSO) (Cols 11-15: L to P)
+        { s: { r: 0, c: 16 }, e: { r: 0, c: 20 } }, // Lab Grown Columns (LAB) (Cols 16-20: Q to U)
+        { s: { r: 0, c: 21 }, e: { r: 0, c: 25 } }, // Natural Diamond Columns (NAT) (Cols 21-25: V to Z)
+        { s: { r: 0, c: 26 }, e: { r: 0, c: 36 } }, // Market Valuation Rates (Cols 26-36: AA to AK)
+        // Bottom Total row: merge Col A-D for "TOTAL"
+        { s: { r: totalRowIndex, c: 0 }, e: { r: totalRowIndex, c: 3 } },
+      ];
+
+      // Compact column widths to minimize horizontal scrolling in Excel
+      worksheet["!cols"] = [
+        { wch: 6 }, // SR.NO
+        { wch: 15 }, // ITEM (compact width)
+        { wch: 11 }, // SKU
+        { wch: 8 }, // SHAPE
+        { wch: 8 }, // SOL WT.
+        { wch: 8 }, // DIA WT.
+        { wch: 10 }, // 18K MW (G)
+        { wch: 8 }, // SOL MM
+        { wch: 7.5 }, // EFM (%)
+        { wch: 7.5 }, // DPM (%)
+        { wch: 7.5 }, // ASP (%)
+        // Moissanite (MOSO)
+        { wch: 9.8 }, // SIL MOSO
+        { wch: 9.8 }, // 10K MOSO
+        { wch: 9.8 }, // 14K MOSO
+        { wch: 9.8 }, // 18K MOSO
+        { wch: 9.8 }, // Plat Moso
+        // Lab Grown (LAB)
+        { wch: 9.8 }, // SIL LAB
+        { wch: 9.8 }, // 10K LAB
+        { wch: 9.8 }, // 14K LAB
+        { wch: 9.8 }, // 18K LAB
+        { wch: 9.8 }, // Plat Lab
+        // Natural Diamond (NAT)
+        { wch: 9.8 }, // SIL NAT
+        { wch: 9.8 }, // 10K NAT
+        { wch: 9.8 }, // 14K NAT
+        { wch: 9.8 }, // 18K NAT
+        { wch: 9.8 }, // Plat Nat
+        // Market Valuation Rates at the end (11 columns)
+        { wch: 11 }, // 24K GOLD (10G)
+        { wch: 9 }, // SILVER (10G)
+        { wch: 11 }, // PLATINUM (10G)
+        { wch: 8.5 }, // LABOR / G
+        { wch: 10 }, // OTHER CHG (₹)
+        { wch: 11 }, // MOSO MAIN / CT
+        { wch: 11 }, // MOSO SIDE / CT
+        { wch: 11 }, // LAB MAIN / CT
+        { wch: 11 }, // LAB SIDE / CT
+        { wch: 11 }, // NAT MAIN / CT
+        { wch: 11 }, // NAT SIDE / CT
       ];
 
       const workbook = XLSX.utils.book_new();
@@ -1225,6 +1838,8 @@ export default async function handler(req, res) {
     const { spreadsheetId, rowData } = req.body;
     
     // Securely forwards payload to Express API or processes natively
+    // const response = await axios.post('http://localhost:5000/api/sheets/append', {    // For local testing
+    
     const response = await axios.post('https://techsoulstudio-back.onrender.com/api/sheets/append', {
       spreadsheetId,
       rowData
@@ -1322,9 +1937,8 @@ function doPost(e) {
 // 5. Deploy, copy the "Web App URL" and paste it into the "Google Sheets Direct Stream" card!`;
 
   return (
-    <div className="min-h-screen bg-[#5a5d59] text-[#DAD9D6] font-sans selection:bg-[#F1641E]/20 selection:text-[#BCBCB4] relative">
-      <Toaster
-        position="top-right"
+    <div className="min-h-screen bg-[#5a5d59] text-[#DAD9D6] font-sans selection:bg-[#F1641E]/20 selection:text-[#BCBCB4] relative overflow-x-hidden">
+      <Toaster position="top-right"
         toastOptions={{
           duration: 1800,
           style: {
@@ -1350,24 +1964,21 @@ function doPost(e) {
                 : `Are you sure you want to delete SKU "${confirmModalData.sku}" (SR.NO: ${confirmModalData.srNo})? This will remove the row locally and send a delete request to your connected Google Sheet.`}
             </p>
             <div className="flex justify-end gap-3 pt-2">
-              <button
-                onClick={() => {
-                  setShowConfirmModal(false);
-                  setConfirmModalData({
-                    type: "single",
-                    index: null,
-                    sku: "",
-                    srNo: null,
-                  });
-                }}
+              <button onClick={() => {
+                setShowConfirmModal(false);
+                setConfirmModalData({
+                  type: "single",
+                  index: null,
+                  sku: "",
+                  srNo: null,
+                });
+              }}
                 className="px-4 py-2 rounded-lg bg-[#363835] hover:bg-[#4d4f4c] text-[#BCBCB4] font-semibold text-sm transition-colors cursor-pointer"
               >
                 No, Cancel
               </button>
-              <button
-                onClick={executeDeleteAction}
-                className="px-4 py-2 rounded-lg bg-[#F1641E] hover:bg-[#d85312] text-[#DAD9D0] font-bold text-sm transition-colors shadow shadow-[#F1641E]/10 cursor-pointer"
-              >
+              <button onClick={executeDeleteAction}
+                className="px-4 py-2 rounded-lg bg-[#F1641E] hover:bg-[#d85312] text-[#DAD9D0] font-bold text-sm transition-colors shadow shadow-[#F1641E]/10 cursor-pointer" >
                 Yes, Delete
               </button>
             </div>
@@ -1375,10 +1986,199 @@ function doPost(e) {
         </div>
       )}
 
+      {/* Edit Product Modal */}
+      {showEditModal && editingProduct && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-[#424441] border border-[#6e716d] rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[#6e716d] bg-[#363835]">
+              <div className="flex items-center gap-2 text-[#F1641E]">
+                <Pencil className="h-5 w-5 stroke-[2]" />
+                <h3 className="text-lg font-bold text-white uppercase tracking-wider">
+                  Edit Product (SKU: {editingProduct.sku})
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingProduct(null);
+                }}
+                className="text-[#DAD9D6] hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSaveEditProduct} className="p-6 space-y-5">
+              <div className="bg-[#363835]/50 border border-[#6e716d] rounded-xl p-5">
+                <h4 className="text-md uppercase font-bold tracking-wider text-[#F1641E] flex items-center gap-2 mb-4 pb-3 border-b border-[#6e716d]">
+                  <Tag className="h-4 w-4 text-[#F1641E]" />
+                  1. Product Details & SKU
+                </h4>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Item Name / Description */}
+                  <div className="col-span-2 space-y-1.5">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      Item Name / Description
+                    </label>
+                    <input type="text"
+                      value={editingProduct.item}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, item: e.target.value })
+                      }
+                      placeholder="e.g. Classic Solitaire Ring"
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* SKU Code */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      SKU Code
+                    </label>
+                    <input type="text"
+                      value={editingProduct.sku}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, sku: e.target.value })
+                      }
+                      placeholder="e.g. JW-RING-001"
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                      required
+                    />
+                  </div>
+
+                  {/* Stone Shape */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      Stone Shape
+                    </label>
+                    <select
+                      value={editingProduct.shape}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, shape: e.target.value })
+                      }
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                    >
+                      {[
+                        "Round",
+                        "Cushion",
+                        "Oval",
+                        "Princess",
+                        "Pear",
+                        "Marquise",
+                        "Emerald",
+                        "Radiant",
+                        "Asscher",
+                        "Heart",
+                      ].map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Sol MM (Size) */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      Sol MM (Size)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingProduct.solMm}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, solMm: e.target.value })
+                      }
+                      placeholder="e.g. 6.5 mm"
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                    />
+                  </div>
+
+                  {/* Sol Wt (Main Carats) */}
+                  <div className="space-y-1.5">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      Sol Wt (Main Carats)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.solWt}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, solWt: e.target.value })
+                      }
+                      placeholder="e.g. 1.0"
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                    />
+                  </div>
+
+                  {/* Side Dia Wt (Carat) */}
+                  <div className="space-y-1.5 col-span-2">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      Side Dia Wt (Carat)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.sideDiaWt}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, sideDiaWt: e.target.value })
+                      }
+                      placeholder="e.g. 0.25"
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                    />
+                  </div>
+
+                  {/* 18K Metal Weight (g) */}
+                  <div className="space-y-1.5 col-span-2">
+                    <label className="block text-xs md:text-base font-bold text-[#DAD9D6] uppercase tracking-wider">
+                      18K Metal Weight (g) - 18K MW (g)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingProduct.metalWeight}
+                      onChange={(e) =>
+                        setEditingProduct({ ...editingProduct, metalWeight: e.target.value })
+                      }
+                      placeholder="e.g. 5.5"
+                      className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs md:text-[15px] text-[#BCBCB4] outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingProduct(null);
+                  }}
+                  className="px-4 py-2 rounded-lg bg-[#363835] hover:bg-[#4d4f4c] text-[#BCBCB4] font-semibold text-sm md:text-base transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-5 py-2 rounded-lg bg-[#F1641E] hover:bg-[#d85312] text-white font-bold text-sm md:text-base transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {editLoading ? "Saving Changes..." : "Save Changes"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showLoginRequiredModal && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-md"
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md"
             onClick={() => setShowLoginRequiredModal(false)}
           />
 
@@ -1401,18 +2201,16 @@ function doPost(e) {
             </div>
 
             <div className="mt-6 space-y-3">
-              <button
-                onClick={() => {
-                  setShowLoginRequiredModal(false);
-                  setOpenLoginModal(true);
-                }}
+              <button onClick={() => {
+                setShowLoginRequiredModal(false);
+                setOpenLoginModal(true);
+              }}
                 className="w-full py-3 rounded-xl bg-[#F1641E] hover:bg-[#d85312] text-white font-bold transition-all cursor-pointer"
               >
                 Login Now
               </button>
 
-              <button
-                onClick={() => setShowLoginRequiredModal(false)}
+              <button onClick={() => setShowLoginRequiredModal(false)}
                 className="w-full py-3 rounded-xl border border-[#6e716d] text-[#BCBCB4] hover:bg-[#363835] transition-all cursor-pointer"
               >
                 Maybe Later
@@ -1440,22 +2238,19 @@ function doPost(e) {
           </div>
           <div className="fixed top-4 right-10 z-50 flex items-center gap-3">
             {isLoggedIn ? (
-              <button
-                onClick={() => setShowLogoutModal(true)}
+              <button onClick={() => setShowLogoutModal(true)}
                 className="text-[#DAD9D6] cursor-pointer"
               >
                 <LogOut className="h-8 w-8 stroke-[2]" />
               </button>
             ) : (
-              <button
-                onClick={() => setOpenLoginModal(true)}
+              <button onClick={() => setOpenLoginModal(true)}
                 className="text-[#DAD9D6] cursor-pointer"
               >
                 <CircleUser className="h-8 w-8 stroke-[2]" />
               </button>
             )}
-            <button
-              onClick={() => setOpenMenu(true)}
+            <button onClick={() => setOpenMenu(true)}
               className=" text-white cursor-pointer"
             >
               <RiMenu3FillSvg />
@@ -1534,13 +2329,11 @@ function doPost(e) {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Moissanite option */}
-                <button
-                  onClick={() => toggleCategory("Moissanite")}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${
-                    selectedCategories.includes("Moissanite")
-                      ? "bg-blue-950/40 border-blue-500 shadow-lg shadow-blue-500/10 text-[#BCBCB4]"
-                      : "bg-[#363835] border-[#4d4f4c] hover:bg-[#4d4f4c] text-[#DAD9D6]"
-                  }`}
+                <button onClick={() => toggleCategory("Moissanite")}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${selectedCategories.includes("Moissanite")
+                    ? "bg-blue-950/40 border-blue-500 shadow-lg shadow-blue-500/10 text-[#BCBCB4]"
+                    : "bg-[#363835] border-[#4d4f4c] hover:bg-[#4d4f4c] text-[#DAD9D6]"
+                    }`}
                 >
                   <div>
                     {/* <span className="text-xs text-[#DAD9D6]/60 block">
@@ -1548,8 +2341,7 @@ function doPost(e) {
                     </span> */}
                     <span className="text-sm font-bold">Moissanite (MOSO)</span>
                   </div>
-                  <div
-                    className={`h-6 w-6 rounded-full flex items-center justify-center ${selectedCategories.includes("Moissanite") ? "bg-blue-500 text-slate-950" : "border border-[#6e716d]"}`}
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center ${selectedCategories.includes("Moissanite") ? "bg-blue-500 text-slate-950" : "border border-[#6e716d]"}`}
                   >
                     {selectedCategories.includes("Moissanite") ? (
                       <Check className="h-3.5 w-3.5 stroke-[3]" />
@@ -1560,13 +2352,11 @@ function doPost(e) {
                 </button>
 
                 {/* Lab Grown option */}
-                <button
-                  onClick={() => toggleCategory("Lab Grown")}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${
-                    selectedCategories.includes("Lab Grown")
-                      ? "bg-cyan-950/40 border-cyan-500 shadow-lg shadow-cyan-500/10 text-[#BCBCB4]"
-                      : "bg-[#363835] border-[#4d4f4c] hover:bg-[#4d4f4c] text-[#DAD9D6]"
-                  }`}
+                <button onClick={() => toggleCategory("Lab Grown")}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${selectedCategories.includes("Lab Grown")
+                    ? "bg-cyan-950/40 border-cyan-500 shadow-lg shadow-cyan-500/10 text-[#BCBCB4]"
+                    : "bg-[#363835] border-[#4d4f4c] hover:bg-[#4d4f4c] text-[#DAD9D6]"
+                    }`}
                 >
                   <div>
                     {/* <span className="text-xs text-[#DAD9D6]/60 block">
@@ -1574,8 +2364,7 @@ function doPost(e) {
                     </span> */}
                     <span className="text-sm font-bold">Lab Grown (LAB)</span>
                   </div>
-                  <div
-                    className={`h-6 w-6 rounded-full flex items-center justify-center ${selectedCategories.includes("Lab Grown") ? "bg-cyan-500 text-slate-950" : "border border-[#6e716d]"}`}
+                  <div className={`h-6 w-6 rounded-full flex items-center justify-center ${selectedCategories.includes("Lab Grown") ? "bg-cyan-500 text-slate-950" : "border border-[#6e716d]"}`}
                   >
                     {selectedCategories.includes("Lab Grown") ? (
                       <Check className="h-3.5 w-3.5 stroke-[3]" />
@@ -1586,13 +2375,11 @@ function doPost(e) {
                 </button>
 
                 {/* Natural option */}
-                <button
-                  onClick={() => toggleCategory("Natural")}
-                  className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${
-                    selectedCategories.includes("Natural")
-                      ? "bg-emerald-950/40 border-emerald-500 shadow-lg shadow-emerald-500/10 text-[#BCBCB4]"
-                      : "bg-[#363835] border-[#4d4f4c] hover:bg-[#4d4f4c] text-[#DAD9D6]"
-                  }`}
+                <button onClick={() => toggleCategory("Natural")}
+                  className={`flex items-center justify-between p-4 rounded-xl border transition-all text-left ${selectedCategories.includes("Natural")
+                    ? "bg-emerald-950/40 border-emerald-500 shadow-lg shadow-emerald-500/10 text-[#BCBCB4]"
+                    : "bg-[#363835] border-[#4d4f4c] hover:bg-[#4d4f4c] text-[#DAD9D6]"
+                    }`}
                 >
                   <div>
                     {/* <span className="text-xs text-[#DAD9D6]/60 block">
@@ -1679,8 +2466,7 @@ function doPost(e) {
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
                       SKU Code
                     </label>
-                    <input
-                      type="text"
+                    <input type="text"
                       value={sku}
                       onChange={(e) => setSku(e.target.value)}
                       placeholder="e.g. JW-R01-MOS"
@@ -1692,8 +2478,7 @@ function doPost(e) {
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
                       Stone Shape
                     </label>
-                    <select
-                      value={shape}
+                    <select value={shape}
                       onChange={(e) => setShape(e.target.value)}
                       className="w-full bg-[#363835] border border-[#4d4f4c] focus:border-[#F1641E] focus:ring-1 focus:ring-[#F1641E] rounded-lg py-2 px-3 text-xs text-[#BCBCB4]"
                     >
@@ -1712,8 +2497,7 @@ function doPost(e) {
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
                       Sol MM (Size)
                     </label>
-                    <input
-                      type="text"
+                    <input type="text"
                       value={solMm}
                       onChange={(e) => setSolMm(e.target.value)}
                       placeholder="e.g. 6.5 mm"
@@ -1725,8 +2509,7 @@ function doPost(e) {
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
                       Sol Wt (Main Carats)
                     </label>
-                    <input
-                      type="number"
+                    <input type="number"
                       step="0.01"
                       value={mainStoneWeight}
                       onChange={(e) =>
@@ -1740,8 +2523,7 @@ function doPost(e) {
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
                       Side Dia Wt (Carat)
                     </label>
-                    <input
-                      type="number"
+                    <input type="number"
                       step="0.01"
                       value={sideStoneWeight}
                       onChange={(e) =>
@@ -1753,10 +2535,9 @@ function doPost(e) {
 
                   <div className="space-y-1.5 col-span-2">
                     <label className="block text-md font-bold text-[#DAD9D6] uppercase tracking-wider">
-                      18K Metal Weight (g)
+                      18K Metal Weight (g) - 18K MW (g)
                     </label>
-                    <input
-                      type="number"
+                    <input type="number"
                       step="0.01"
                       value={metalWeight}
                       onChange={(e) =>
@@ -1782,8 +2563,7 @@ function doPost(e) {
                       <label className="block text-md text-[#DAD9D6] uppercase font-bold">
                         24K Gold (10g)
                       </label>
-                      <input
-                        type="number"
+                      <input type="number"
                         value={gold24k10g}
                         onChange={(e) =>
                           setGold24k10g(Math.max(0, Number(e.target.value)))
@@ -1795,8 +2575,7 @@ function doPost(e) {
                       <label className="block text-md text-[#DAD9D6] uppercase font-bold">
                         Silver (10g)
                       </label>
-                      <input
-                        type="number"
+                      <input type="number"
                         value={silver10g}
                         onChange={(e) =>
                           setSilver10g(Math.max(0, Number(e.target.value)))
@@ -1809,8 +2588,7 @@ function doPost(e) {
                         Platinum (10g)
                       </label>
 
-                      <input
-                        type="number"
+                      <input type="number"
                         value={platinum10g}
                         onChange={(e) =>
                           setPlatinum10g(Math.max(0, Number(e.target.value)))
@@ -1826,8 +2604,7 @@ function doPost(e) {
                       <label className="block text-md text-[#DAD9D6] uppercase font-bold">
                         Labor Per Gram
                       </label>
-                      <input
-                        type="number"
+                      <input type="number"
                         value={laborPerGram}
                         onChange={(e) =>
                           setLaborPerGram(Math.max(0, Number(e.target.value)))
@@ -1839,8 +2616,7 @@ function doPost(e) {
                       <label className="block text-md text-[#DAD9D6] uppercase font-bold">
                         Other Charges ({currencySymbol})
                       </label>
-                      <input
-                        type="number"
+                      <input type="number"
                         value={otherCharges}
                         onChange={(e) =>
                           setOtherCharges(Math.max(0, Number(e.target.value)))
@@ -1867,8 +2643,7 @@ function doPost(e) {
                             <label className="block text-md uppercase font-bold text-[#5A5D59]">
                               Main Per Carat
                             </label>
-                            <input
-                              type="number"
+                            <input type="number"
                               value={mosoMainRate}
                               onChange={(e) =>
                                 setMosoMainRate(
@@ -1882,8 +2657,7 @@ function doPost(e) {
                             <label className="block text-md uppercase font-bold text-[#5A5D59]">
                               Side Per Carat
                             </label>
-                            <input
-                              type="number"
+                            <input type="number"
                               value={mosoSideRate}
                               onChange={(e) =>
                                 setMosoSideRate(
@@ -1908,8 +2682,7 @@ function doPost(e) {
                             <label className="block text-md uppercase font-bold text-[#5A5D59]">
                               Main Per Carat
                             </label>
-                            <input
-                              type="number"
+                            <input type="number"
                               value={labMainRate}
                               onChange={(e) =>
                                 setLabMainRate(
@@ -1923,8 +2696,7 @@ function doPost(e) {
                             <label className="block text-md uppercase font-bold text-[#5A5D59]">
                               Side Per Carat
                             </label>
-                            <input
-                              type="number"
+                            <input type="number"
                               value={labSideRate}
                               onChange={(e) =>
                                 setLabSideRate(
@@ -1949,8 +2721,7 @@ function doPost(e) {
                             <label className="block text-md uppercase font-bold text-[#5A5D59]">
                               Main Per Carat
                             </label>
-                            <input
-                              type="number"
+                            <input type="number"
                               value={natMainRate}
                               onChange={(e) =>
                                 setNatMainRate(
@@ -1964,8 +2735,7 @@ function doPost(e) {
                             <label className="block text-md uppercase font-bold text-[#5A5D59]">
                               Side Per Carat
                             </label>
-                            <input
-                              type="number"
+                            <input type="number"
                               value={natSideRate}
                               onChange={(e) =>
                                 setNatSideRate(
@@ -1995,11 +2765,10 @@ function doPost(e) {
                     <div className="space-y-1">
                       <div className="flex justify-between items-center text-md font-semibold">
                         <span className="text-[#DAD9D6]">
-                          Etsy Fee margin (%)
+                          Etsy Fee margin (%) - EFM (%)
                         </span>
                         <div className="flex items-center gap-1.5 bg-[#363835] border border-[#4d4f4c] rounded px-1.5 py-0.5">
-                          <input
-                            type="number"
+                          <input type="number"
                             step="0.1"
                             value={etsyFeePercent}
                             onChange={(e) =>
@@ -2014,8 +2783,7 @@ function doPost(e) {
                           </span>
                         </div>
                       </div>
-                      <input
-                        type="range"
+                      <input type="range"
                         min="1"
                         max="30"
                         step="0.1"
@@ -2031,11 +2799,10 @@ function doPost(e) {
                     <div className="space-y-1">
                       <div className="flex justify-between items-center text-md font-semibold">
                         <span className="text-[#DAD9D6]">
-                          Desired profit markup (%)
+                          Desired profit markup (%) - DPM (%)
                         </span>
                         <div className="flex items-center gap-1.5 bg-[#363835] border border-[#4d4f4c] rounded px-1.5 py-0.5">
-                          <input
-                            type="number"
+                          <input type="number"
                             step="1"
                             value={profitPercent}
                             onChange={(e) =>
@@ -2050,8 +2817,7 @@ function doPost(e) {
                           </span>
                         </div>
                       </div>
-                      <input
-                        type="range"
+                      <input type="range"
                         min="5"
                         max="250"
                         value={profitPercent}
@@ -2066,11 +2832,10 @@ function doPost(e) {
                     <div className="space-y-1">
                       <div className="flex justify-between items-center text-md font-semibold">
                         <span className="text-[#DAD9D6]">
-                          Active Sale Promotion (%)
+                          Active Sale Promotion (%) - ASP (%)
                         </span>
                         <div className="flex items-center gap-1.5 bg-[#363835] border border-[#4d4f4c] rounded px-1.5 py-0.5">
-                          <input
-                            type="number"
+                          <input type="number"
                             step="1"
                             value={salePercent}
                             onChange={(e) =>
@@ -2148,11 +2913,10 @@ function doPost(e) {
                     <button
                       key={cat}
                       onClick={() => setPreviewTab(cat)}
-                      className={`flex-1 py-1.5 rounded-lg text-lg font-bold transition-all ${
-                        previewTab === cat
-                          ? "bg-[#BCBCB4] text-[#424441] font-extrabold"
-                          : "text-[#DAD9D6] hover:text-[#BCBCB4]"
-                      }`}
+                      className={`flex-1 py-1.5 rounded-lg text-lg font-bold transition-all ${previewTab === cat
+                        ? "bg-[#BCBCB4] text-[#424441] font-extrabold"
+                        : "text-[#DAD9D6] hover:text-[#BCBCB4]"
+                        }`}
                     >
                       {cat} Preview
                     </button>
@@ -2182,10 +2946,8 @@ function doPost(e) {
                     </thead>
                     <tbody className="divide-y divide-[#4d4f4c] text-md">
                       {getActivePreviewData().map((item, idx) => (
-                        <tr
-                          key={idx}
-                          className="hover:bg-[#424441]/40 transition-colors"
-                        >
+                        <tr key={idx}
+                          className="hover:bg-[#424441]/40 transition-colors" >
                           <td className="py-3.5 px-4 font-bold font-sans text-[#DAD9D6]">
                             {item.metalName}
                           </td>
@@ -2234,10 +2996,8 @@ function doPost(e) {
                     </thead>
                     <tbody className="divide-y divide-[#4d4f4c] text-md">
                       {getActivePreviewData().map((item, idx) => (
-                        <tr
-                          key={idx}
-                          className="hover:bg-[#424441]/40 transition-colors"
-                        >
+                        <tr key={idx}
+                          className="hover:bg-[#424441]/40 transition-colors" >
                           <td className="py-3.5 px-4 font-bold font-sans text-[#DAD9D6]">
                             {item.metalName}
                           </td>
@@ -2310,221 +3070,257 @@ function doPost(e) {
                       details.
                     </div>
                   ) : (
-                    <div className="overflow-x-auto rounded-xl border border-[#6e716d] bg-[#363835] max-h-[550px]">
-                      <table
-                        className="w-full text-left text-md border-collapse"
-                        style={{ minWidth: "2000px" }}
-                      >
-                        <thead>
-                          {/* Top Row Category Grouping */}
-                          <tr className="bg-[#424441] border-b border-[#4d4f4c] text-md font-bold text-[#DAD9D6] uppercase tracking-wider text-center">
-                            <th
-                              colSpan={4}
-                              className="py-2 border-r border-[#4d4f4c]"
-                            >
+                    <div
+                      ref={setTableRef}
+                      onMouseDown={handleTableMouseDown}
+                      className={`overflow-x-auto overflow-y-auto rounded-xl border border-[#6e716d] bg-[#363835] max-h-[460px] overscroll-contain select-none ${isTableDragging ? "cursor-grabbing" : "cursor-grab"
+                        }`}
+                    >
+                      <table className="w-full text-left text-sm border-separate border-spacing-0"
+                        style={{ minWidth: "1380px" }}>
+                        <thead className="bg-[#363835]">
+                          <tr className="text-sm font-bold text-[#DAD9D6] uppercase tracking-wider text-center h-[36px]">
+                            <th colSpan={4}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] h-[36px] leading-tight" >
                               General Metadata
                             </th>
-                            <th
-                              colSpan={1}
-                              className="py-2 border-r border-[#4d4f4c] bg-[#363835] text-indigo-400"
-                            >
-                              SIDE
-                            </th>
-                            <th
-                              colSpan={1}
-                              className="py-2 border-r border-[#4d4f4c]"
-                            >
-                              Size
-                            </th>
-                            <th
-                              colSpan={1}
-                              className="py-2 border-r border-[#4d4f4c] bg-[#363835] text-[#F1641E]"
-                            >
+                            <th colSpan={1}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r-2 border-b border-[#4d4f4c] text-[#F1641E] h-[36px] leading-tight">
                               MAIN
                             </th>
-                            <th
-                              colSpan={5}
-                              className="py-2 border-r border-[#4d4f4c] bg-blue-900/20 text-blue-300"
-                            >
+                            <th colSpan={1}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] text-indigo-400 h-[36px] leading-tight" >
+                              SIDE
+                            </th>
+                            <th colSpan={1}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] text-amber-400 h-[36px] leading-tight" >
+                              18K MW (G)
+                            </th>
+                            <th colSpan={1}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] h-[36px] leading-tight" >
+                              Size
+                            </th>
+                            <th colSpan={3}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] text-[#F1641E] h-[36px] leading-tight" >
+                              Etsy Margins
+                            </th>
+                            <th colSpan={5}
+                              className="sticky top-0 z-20 bg-[#2d3748] py-1.5 border-r border-b border-[#4d4f4c] text-blue-300 h-[36px] leading-tight">
                               Moissanite Columns (MOSO)
                             </th>
-                            <th
-                              colSpan={5}
-                              className="py-2 border-r border-[#4d4f4c] bg-cyan-900/20 text-cyan-300"
-                            >
+                            <th colSpan={5}
+                              className="sticky top-0 z-20 bg-[#1e3a47] py-1.5 border-r border-b border-[#4d4f4c] text-cyan-300 h-[36px] leading-tight">
                               Lab Grown Columns (LAB)
                             </th>
-                            <th
-                              colSpan={5}
-                              className="py-2 bg-emerald-900/20 text-emerald-300"
-                            >
+                            <th colSpan={5}
+                              className="sticky top-0 z-20 bg-[#1c382e] py-1.5 border-r border-b border-[#4d4f4c] text-emerald-300 h-[36px] leading-tight">
                               Natural Diamond Columns (NAT)
                             </th>
+                            <th colSpan={2}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-b border-[#4d4f4c] text-amber-400 h-[36px] leading-tight">
+                              ACTIONS
+                            </th>
                           </tr>
-
-                          {/* Main Row Header */}
-                          <tr className="bg-[#424441]/90 border-b border-[#4d4f4c] text-sm font-bold uppercase text-[#DAD9D6]">
-                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                          <tr className="text-xs font-bold uppercase text-[#DAD9D6]">
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-12 text-sm">
                               SR.NO
                             </th>
-                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-3 border-r border-b border-[#4d4f4c] text-left whitespace-nowrap text-sm">
                               ITEM
                             </th>
-                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-left w-24 text-sm">
                               SKU
                             </th>
-                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 text-sm">
                               SHAPE
                             </th>
-                            <th className="py-3 px-3 border-r border-[#4d4f4c] bg-[#424441]/40">
-                              DIA WT.
-                            </th>
-                            <th className="py-3 px-3 border-r border-[#4d4f4c]">
-                              SOL MM
-                            </th>
-                            <th className="py-3 px-3 border-r border-[#4d4f4c] bg-[#424441]/40">
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r-2 border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
                               SOL WT.
                             </th>
-
-                            {/* Moissanite Purities */}
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-blue-900/10">
-                              SIL MOSO
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
+                              DIA WT.
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-blue-400 bg-blue-900/10">
-                              10K MOSO
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-24 whitespace-nowrap text-sm">
+                              18K MW (G)
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-blue-300 bg-blue-900/10">
-                              14K MOSO
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
+                              SOL MM
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-400 bg-blue-900/10">
-                              18K MOSO
+                            <th title="Etsy Fee Margin (%)" className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
+                              EFM (%)
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-blue-900/15">
-                              Plat Moso
+                            <th title="Desired Profit Markup (%)" className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
+                              DPM (%)
                             </th>
-
-                            {/* Lab Grown Purities */}
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-cyan-900/10">
-                              SIL LAB
+                            <th title="Active Sale Promotion (%)" className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
+                              ASP (%)
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-cyan-400 bg-cyan-900/10">
-                              10K LAB
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-slate-400 min-w-[62px] text-xs font-bold leading-tight">
+                              <div>SIL</div>
+                              <div>MOSO</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-cyan-300 bg-cyan-900/10">
-                              14K LAB
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-blue-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>10K</div>
+                              <div>MOSO</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-400 bg-cyan-900/10">
-                              18K LAB
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-blue-300 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>14K</div>
+                              <div>MOSO</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-cyan-900/15">
-                              Plat Lab
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-emerald-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>18K</div>
+                              <div>MOSO</div>
                             </th>
-
-                            {/* Natural Purities */}
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-slate-400 bg-emerald-900/10">
-                              SIL NAT
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-amber-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>PLAT</div>
+                              <div>MOSO</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-455 bg-emerald-900/10">
-                              10K NAT
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-slate-400 min-w-[62px] text-xs font-bold leading-tight">
+                              <div>SIL</div>
+                              <div>LAB</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-emerald-300 bg-emerald-900/10">
-                              14K NAT
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-cyan-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>10K</div>
+                              <div>LAB</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-green-400 bg-emerald-900/10">
-                              18K NAT
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-cyan-300 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>14K</div>
+                              <div>LAB</div>
                             </th>
-                            <th className="py-3 px-2 border-r border-[#4d4f4c] text-center text-amber-400 bg-emerald-900/15">
-                              Plat Nat
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-emerald-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>18K</div>
+                              <div>LAB</div>
                             </th>
-
-                            <th className="py-3 px-2 text-center">Delete</th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-amber-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>PLAT</div>
+                              <div>LAB</div>
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-slate-400 min-w-[62px] text-xs font-bold leading-tight">
+                              <div>SIL</div>
+                              <div>NAT</div>
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-emerald-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>10K</div>
+                              <div>NAT</div>
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-emerald-300 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>14K</div>
+                              <div>NAT</div>
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-green-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>18K</div>
+                              <div>NAT</div>
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-1 px-1.5 border-r border-b border-[#4d4f4c] text-center text-amber-400 font-bold min-w-[62px] text-xs leading-tight">
+                              <div>PLAT</div>
+                              <div>NAT</div>
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center whitespace-nowrap w-12 text-amber-400 text-sm">
+                              EDIT
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-b border-[#4d4f4c] text-center whitespace-nowrap w-14 text-red-400 text-sm">
+                              DELETE
+                            </th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-[#4d4f4c]">
+                        <tbody>
                           {excelRows.map((row, index) => (
-                            <tr
-                              key={index}
-                              className="hover:bg-[#424441]/30 text-sm transition-all"
-                            >
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]/70">
+                            <tr key={index}
+                              className="hover:bg-[#424441]/40 text-sm transition-colors">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6]/70 text-center whitespace-nowrap">
                                 {row.srNo}
                               </td>
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] font-sans font-medium text-[#BCBCB4]">
+                              <td className="py-2 px-3 border-r border-b border-[#4d4f4c] text-left whitespace-nowrap text-sm font-sans font-medium text-[#BCBCB4]" title={row.item}>
                                 {row.item}
                               </td>
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]/80">
+                              <td className="py-2 px-2.5 border-r border-b border-[#4d4f4c] text-[#DAD9D6]/80 text-left whitespace-nowrap">
                                 {row.sku}
                               </td>
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6]">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
                                 {row.shape}
                               </td>
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20">
-                                {row.sideDiaWt}
-                              </td>
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center">
-                                {row.solMm}
-                              </td>
-                              <td className="py-2.5 px-3 border-r border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20 whitespace-nowrap">
                                 {row.solWt}
                               </td>
-
-                              {/* Moissanite columns */}
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-[#DAD9D6]/80">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20 whitespace-nowrap">
+                                {row.sideDiaWt}
+                              </td>
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
+                                {row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? row.goldWeight ?? row.weight ?? "N/A")}
+                              </td>
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
+                                {row.solMm}
+                              </td>
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
+                                {row.etsyFeePercent !== undefined && row.etsyFeePercent !== null && row.etsyFeePercent !== "" ? row.etsyFeePercent : (row.etsyFeeMargin ?? row.etsyFee ?? "N/A")}
+                              </td>
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
+                                {row.profitPercent !== undefined && row.profitPercent !== null && row.profitPercent !== "" ? row.profitPercent : (row.profitMarkup ?? row.profit ?? "N/A")}
+                              </td>
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
+                                {row.salePercent !== undefined && row.salePercent !== null && row.salePercent !== "" ? row.salePercent : (row.salePromotion ?? row.salePromo ?? row.promotion ?? "N/A")}
+                              </td>
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-blue-950/20 text-[#DAD9D6]/80 whitespace-nowrap">
                                 {row.silMoso}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-blue-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-blue-950/20 text-blue-400 font-bold whitespace-nowrap">
                                 {row.g10kMoso}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-blue-300 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-blue-950/20 text-blue-300 font-bold whitespace-nowrap">
                                 {row.g14kMoso}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/20 text-emerald-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-blue-950/20 text-emerald-400 font-bold whitespace-nowrap">
                                 {row.g18kMoso}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-blue-950/30 text-amber-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-blue-950/30 text-amber-400 font-bold whitespace-nowrap">
                                 {row.platMoso}
                               </td>
-
-                              {/* Lab Grown columns */}
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-[#DAD9D6]/80">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-cyan-950/20 text-[#DAD9D6]/80 whitespace-nowrap">
                                 {row.silLab}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-400 font-bold whitespace-nowrap">
                                 {row.g10kLab}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-300 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-cyan-950/20 text-cyan-300 font-bold whitespace-nowrap">
                                 {row.g14kLab}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/20 text-emerald-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-cyan-950/20 text-emerald-400 font-bold whitespace-nowrap">
                                 {row.g18kLab}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-cyan-950/30 text-amber-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-cyan-950/30 text-amber-400 font-bold whitespace-nowrap">
                                 {row.platLab}
                               </td>
-
-                              {/* Natural columns */}
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-[#DAD9D6]/80">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-emerald-950/20 text-[#DAD9D6]/80 whitespace-nowrap">
                                 {row.silNat}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-[#F1641E] font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-emerald-950/20 text-[#F1641E] font-bold whitespace-nowrap">
                                 {row.g10kNat}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-emerald-300 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-emerald-950/20 text-emerald-300 font-bold whitespace-nowrap">
                                 {row.g14kNat}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/20 text-green-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-emerald-950/20 text-green-400 font-bold whitespace-nowrap">
                                 {row.g18kNat}
                               </td>
-                              <td className="py-2.5 px-2 border-r border-[#4d4f4c] text-right bg-emerald-950/30 text-amber-400 font-bold">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-right bg-emerald-950/30 text-amber-400 font-bold whitespace-nowrap">
                                 {row.platNat}
                               </td>
-
-                              <td className="py-2.5 px-2 text-center">
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-center whitespace-nowrap">
+                                <button
+                                  onClick={() => handleOpenEditModal(row)}
+                                  title="Edit Product"
+                                  className="text-amber-400 hover:text-amber-300 transition-colors cursor-pointer inline-flex items-center justify-center p-1 rounded hover:bg-amber-400/10"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </button>
+                              </td>
+                              <td className="py-2 px-2 border-b border-[#4d4f4c] text-center whitespace-nowrap">
                                 <button
                                   onClick={() => confirmRemoveExcelRow(index)}
-                                  className="text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                                  title="Delete Product"
+                                  className="text-red-400 hover:text-red-300 transition-colors cursor-pointer inline-flex items-center justify-center p-1 rounded hover:bg-red-400/10"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <Trash2 className="h-4 w-4" />
                                 </button>
                               </td>
                             </tr>
@@ -2557,48 +3353,44 @@ function doPost(e) {
             <div className="flex border-b border-[#6e716d] gap-2 mb-4">
               <button
                 onClick={() => setActiveCodeTab("nextjs")}
-                className={`px-4 py-2 text-xl font-bold border-b-2 transition-all ${
-                  activeCodeTab === "nextjs"
-                    ? "border-[#F1641E] text-[#DAD9D6] font-bold"
-                    : "border-transparent text-[#DAD9D6] hover:text-[#BCBCB4]"
-                }`}
+                className={`px-4 py-2 text-xl font-bold border-b-2 transition-all ${activeCodeTab === "nextjs"
+                  ? "border-[#F1641E] text-[#DAD9D6] font-bold"
+                  : "border-transparent text-[#DAD9D6] hover:text-[#BCBCB4]"
+                  }`}
               >
                 Frontend (Next.js / React)
               </button>
               <button
                 onClick={() => setActiveCodeTab("express")}
-                className={`px-4 py-2 text-xl font-bold border-b-2 transition-all ${
-                  activeCodeTab === "express"
-                    ? "border-[#F1641E] text-[#DAD9D6] font-bold"
-                    : "border-transparent text-[#DAD9D6] hover:text-[#BCBCB4]"
-                }`}
+                className={`px-4 py-2 text-xl font-bold border-b-2 transition-all ${activeCodeTab === "express"
+                  ? "border-[#F1641E] text-[#DAD9D6] font-bold"
+                  : "border-transparent text-[#DAD9D6] hover:text-[#BCBCB4]"
+                  }`}
               >
                 Backend (Node / Express)
               </button>
               <button
                 onClick={() => setActiveCodeTab("mongodb")}
-                className={`px-4 py-2 text-xl font-bold border-b-2 transition-all ${
-                  activeCodeTab === "mongodb"
-                    ? "border-[#F1641E] text-[#DAD9D6] font-bold"
-                    : "border-transparent text-[#DAD9D6] hover:text-[#BCBCB4]"
-                }`}
+                className={`px-4 py-2 text-xl font-bold border-b-2 transition-all ${activeCodeTab === "mongodb"
+                  ? "border-[#F1641E] text-[#DAD9D6] font-bold"
+                  : "border-transparent text-[#DAD9D6] hover:text-[#BCBCB4]"
+                  }`}
               >
                 Google Apps Script
               </button>
             </div>
 
             <div className="relative">
-              <button
-                onClick={() =>
-                  handleCopyToClipboard(
-                    activeCodeTab === "nextjs"
-                      ? nextJSCode
-                      : activeCodeTab === "express"
-                        ? expressCode
-                        : mongoCode,
-                    activeCodeTab,
-                  )
-                }
+              <button onClick={() =>
+                handleCopyToClipboard(
+                  activeCodeTab === "nextjs"
+                    ? nextJSCode
+                    : activeCodeTab === "express"
+                      ? expressCode
+                      : mongoCode,
+                  activeCodeTab,
+                )
+              }
                 className="absolute top-3 right-3 bg-[#363835] hover:bg-[#4d4f4c] text-[#DAD9D6] hover:text-[#BCBCB4] px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all shadow cursor-pointer"
               >
                 {copiedText === activeCodeTab ? (
