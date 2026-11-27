@@ -2068,6 +2068,7 @@ function doPost(e) {
                         "Marquise",
                         "Emerald",
                         "Radiant",
+                        "Baguette",
                         "Asscher",
                         "Heart",
                       ].map((s) => (
@@ -2486,6 +2487,7 @@ function doPost(e) {
                       <option value="Marquise">Marquise</option>
                       <option value="Emerald">Emerald</option>
                       <option value="Radiant">Radiant</option>
+                      <option value="Baguette">Baguette</option>
                     </select>
                   </div>
 
