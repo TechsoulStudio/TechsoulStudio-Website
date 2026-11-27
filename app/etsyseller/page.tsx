@@ -268,6 +268,7 @@ export default function App() {
   const [isTableDragging, setIsTableDragging] = useState(false);
   const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
   const dragAxisRef = useRef<"x" | "y" | null>(null);
+  const hasDraggedRef = useRef(false);
 
   // Reliable callback ref: attaches wheel listener immediately when container mounts
   const setTableRef = useCallback((node: HTMLDivElement | null) => {
@@ -323,6 +324,7 @@ export default function App() {
   const handleTableMouseDown = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest("button, input, select, a")) return;
     if (!tableScrollRef.current) return;
+    hasDraggedRef.current = false;
     setIsTableDragging(true);
     dragAxisRef.current = null;
     setDragStartPos({
@@ -337,32 +339,26 @@ export default function App() {
     if (!isTableDragging) return;
     const onMouseMove = (e: MouseEvent) => {
       if (!tableScrollRef.current) return;
-      e.preventDefault();
       const dx = e.pageX - dragStartPos.x;
       const dy = e.pageY - dragStartPos.y;
 
-      // Lock to dominant axis once movement passes 3px threshold to eliminate accidental diagonal drift
-      if (!dragAxisRef.current) {
-        if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) >= 3) {
-          dragAxisRef.current = "x";
-        } else if (Math.abs(dy) > Math.abs(dx) && Math.abs(dy) >= 3) {
-          dragAxisRef.current = "y";
-        }
-      }
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
 
-      if (dragAxisRef.current === "x") {
-        // Strictly horizontal drag - keep vertical scroll locked
-        tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft - dx;
-        tableScrollRef.current.scrollTop = dragStartPos.scrollTop;
-      } else if (dragAxisRef.current === "y") {
-        // Strictly vertical drag - keep horizontal scroll locked
-        tableScrollRef.current.scrollTop = dragStartPos.scrollTop - dy;
-        tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft;
-      } else {
-        if (Math.abs(dx) >= Math.abs(dy)) {
+      // Only enter drag-to-scroll mode once mouse passes 4px threshold
+      if (absX > 4 || absY > 4) {
+        hasDraggedRef.current = true;
+        e.preventDefault();
+
+        // Strict single-axis lock: horizontal and vertical never scroll at the same time
+        if (absX >= absY) {
+          // Strictly horizontal drag - keep vertical scroll completely locked
           tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft - dx;
+          tableScrollRef.current.scrollTop = dragStartPos.scrollTop;
         } else {
+          // Strictly vertical drag - keep horizontal scroll completely locked
           tableScrollRef.current.scrollTop = dragStartPos.scrollTop - dy;
+          tableScrollRef.current.scrollLeft = dragStartPos.scrollLeft;
         }
       }
     };
@@ -1561,8 +1557,8 @@ export default function App() {
           "",
           "MAIN",
           "SIDE",
-          "18K",
           "Size",
+          "18K",
           "Etsy Margins & Promotions",
           "",
           "",
@@ -1600,8 +1596,8 @@ export default function App() {
           "SHAPE",
           "SOL WT.",
           "DIA WT.",
-          "18K MW (G)",
           "SOL MM",
+          "18K MW (G)",
           "EFM (%)",
           "DPM (%)",
           "ASP (%)",
@@ -1642,8 +1638,8 @@ export default function App() {
           row.shape,
           row.solWt,
           row.sideDiaWt,
-          row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? row.goldWeight ?? row.weight ?? "N/A"),
           row.solMm,
+          row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? row.goldWeight ?? row.weight ?? "N/A"),
           row.etsyFeePercent !== undefined && row.etsyFeePercent !== null && row.etsyFeePercent !== "" ? row.etsyFeePercent : (row.etsyFeeMargin ?? row.etsyFee ?? "N/A"),
           row.profitPercent !== undefined && row.profitPercent !== null && row.profitPercent !== "" ? row.profitPercent : (row.profitMarkup ?? row.profit ?? "N/A"),
           row.salePercent !== undefined && row.salePercent !== null && row.salePercent !== "" ? row.salePercent : (row.salePromotion ?? row.salePromo ?? row.promotion ?? "N/A"),
@@ -1751,8 +1747,8 @@ export default function App() {
         { wch: 8 }, // SHAPE
         { wch: 8 }, // SOL WT.
         { wch: 8 }, // DIA WT.
+        { wch: 10 }, // SOL MM (Size)
         { wch: 10 }, // 18K MW (G)
-        { wch: 8 }, // SOL MM
         { wch: 7.5 }, // EFM (%)
         { wch: 7.5 }, // DPM (%)
         { wch: 7.5 }, // ASP (%)
@@ -3073,10 +3069,10 @@ function doPost(e) {
                     <div
                       ref={setTableRef}
                       onMouseDown={handleTableMouseDown}
-                      className={`overflow-x-auto overflow-y-auto rounded-xl border border-[#6e716d] bg-[#363835] max-h-[460px] overscroll-contain select-none ${isTableDragging ? "cursor-grabbing" : "cursor-grab"
+                      className={`overflow-x-auto overflow-y-auto rounded-xl border border-[#6e716d] bg-[#363835] max-h-[460px] overscroll-contain select-text ${isTableDragging ? "cursor-grabbing" : "cursor-grab"
                         }`}
                     >
-                      <table className="w-full text-left text-sm border-separate border-spacing-0"
+                      <table className="w-full text-left text-sm border-separate border-spacing-0 select-text"
                         style={{ minWidth: "1380px" }}>
                         <thead className="bg-[#363835]">
                           <tr className="text-sm font-bold text-[#DAD9D6] uppercase tracking-wider text-center h-[36px]">
@@ -3093,12 +3089,12 @@ function doPost(e) {
                               SIDE
                             </th>
                             <th colSpan={1}
-                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] text-amber-400 h-[36px] leading-tight" >
-                              18K MW (G)
-                            </th>
-                            <th colSpan={1}
                               className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] h-[36px] leading-tight" >
                               Size
+                            </th>
+                            <th colSpan={1}
+                              className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] text-amber-400 h-[36px] leading-tight" >
+                              18K MW (G)
                             </th>
                             <th colSpan={3}
                               className="sticky top-0 z-20 bg-[#363835] py-1.5 border-r border-b border-[#4d4f4c] text-[#F1641E] h-[36px] leading-tight" >
@@ -3140,11 +3136,11 @@ function doPost(e) {
                             <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
                               DIA WT.
                             </th>
-                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-24 whitespace-nowrap text-sm">
-                              18K MW (G)
-                            </th>
-                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-20 max-w-[95px] whitespace-nowrap text-sm">
                               SOL MM
+                            </th>
+                            <th className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-24 max-w-[100px] whitespace-nowrap text-sm">
+                              18K MW (G)
                             </th>
                             <th title="Etsy Fee Margin (%)" className="sticky top-[35px] z-20 bg-[#424441] py-2 px-2 border-r border-b border-[#4d4f4c] text-center w-16 whitespace-nowrap text-sm">
                               EFM (%)
@@ -3225,8 +3221,37 @@ function doPost(e) {
                         </thead>
                         <tbody>
                           {excelRows.map((row, index) => (
-                            <tr key={index}
-                              className="hover:bg-[#424441]/40 text-sm transition-colors">
+                            <tr
+                              key={index}
+                              onClick={(e) => {
+                                if (hasDraggedRef.current) return;
+                                const td = (e.target as HTMLElement).closest("td");
+                                if (!td || td.querySelector("button")) return;
+                                const text = td.innerText?.trim();
+                                if (!text || text === "N/A" || text === "-") return;
+
+                                // Visually highlight text in cell (matching user's video example)
+                                try {
+                                  const range = document.createRange();
+                                  range.selectNodeContents(td);
+                                  const sel = window.getSelection();
+                                  sel?.removeAllRanges();
+                                  sel?.addRange(range);
+                                } catch (err) {}
+
+                                // Copy value to clipboard
+                                if (navigator?.clipboard?.writeText) {
+                                  navigator.clipboard.writeText(text).catch(() => {
+                                    handleCopyToClipboard(text, "cell");
+                                  });
+                                } else {
+                                  handleCopyToClipboard(text, "cell");
+                                }
+
+                                toast.success(`Copied: "${text}"`, { id: "sheet-cell-copy", duration: 1600 });
+                              }}
+                              className="hover:bg-[#424441]/40 text-sm transition-colors cursor-pointer"
+                            >
                               <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6]/70 text-center whitespace-nowrap">
                                 {row.srNo}
                               </td>
@@ -3245,11 +3270,11 @@ function doPost(e) {
                               <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center bg-[#424441]/20 whitespace-nowrap">
                                 {row.sideDiaWt}
                               </td>
-                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
-                                {row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? row.goldWeight ?? row.weight ?? "N/A")}
+                              <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center max-w-[95px] truncate" title={row.solMm}>
+                                {row.solMm}
                               </td>
                               <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
-                                {row.solMm}
+                                {row.metalWeight !== undefined && row.metalWeight !== null && row.metalWeight !== "" ? row.metalWeight : (row.metalWt ?? row.metal_weight ?? row.goldWeight ?? row.weight ?? "N/A")}
                               </td>
                               <td className="py-2 px-2 border-r border-b border-[#4d4f4c] text-[#DAD9D6] text-center whitespace-nowrap">
                                 {row.etsyFeePercent !== undefined && row.etsyFeePercent !== null && row.etsyFeePercent !== "" ? row.etsyFeePercent : (row.etsyFeeMargin ?? row.etsyFee ?? "N/A")}
